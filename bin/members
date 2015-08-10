@@ -70,7 +70,7 @@ def exclude(users, exclude):
     exclude = exclude or []
 
     if not exclude:
-        return
+        return users
 
     # expecting 1+ patterns to match against
     ex_res = [re.compile(x) for x in exclude]
@@ -132,4 +132,3 @@ if __name__ == "__main__":
         print(output)
 
     logr.info('{} members SAVED'.format(len(users)))
-
