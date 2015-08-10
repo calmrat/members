@@ -21,8 +21,7 @@ __scripts__ = ['bin/members']
 __irequires__ = [
     'functioncache',
     'argparse',
-    'ClientForm',  # FIXME: shouldn't be a hard dep; mailman2 only
-    'mechanize',  # FIXME: shouldn't be a hard dep; mailman2 only
+    'ClientForm',  # FIXME: shouldn't be a hard dep; mailman2 onlyize
     'pyyaml',
     'requests',
     'requests-kerberos',  # FIXME: shouldn't be a hard dep; orgchart3 only

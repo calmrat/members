@@ -8,10 +8,10 @@ from __future__ import unicode_literals
 import logging
 import re
 import sys
+import urllib2
+import cookielib
 
 import ClientForm
-import mechanize
-import requests as rq
 
 
 # load the root logger if it exists; or use the default if not already created
@@ -28,19 +28,18 @@ def check_h2(content, search_str):
 
 def auth(list_link, user, password):
     logr.debug('AUTH {}:{}'.format(user, list_link))
-    cookieJar = mechanize.CookieJar()
+    cookieJar = cookielib.CookieJar()
 
-    opener = mechanize.build_opener(mechanize.HTTPCookieProcessor(cookieJar))
+    opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cookieJar))
     opener.addheaders = [("User-agent", "Mozilla/5.0 (compatible)")]
-    mechanize.install_opener(opener)
+    urllib2.install_opener(opener)
     forms = ClientForm.ParseResponse(
-        mechanize.urlopen(list_link), backwards_compat=False)
-
+        urllib2.urlopen(list_link), backwards_compat=False)
     form = forms[2]
     form['roster-email'] = user
     form['roster-pw'] = password
     try:
-        fp = mechanize.urlopen(form.click())
+        fp = urllib2.urlopen(form.click())
         content = fp.read()
         check_h2(content, 'Error')
     finally:
@@ -71,10 +70,10 @@ def extract(args, config=None):
     if list_user and list_password:
         # auth is specified, use it
         auth(list_link, list_user, list_password)
-        content = mechanize.urlopen(list_members_link).read()
+        content = urllib2.urlopen(list_members_link).read()
     else:
         # if anyone can access to the list of members
-        content = rq.get(list_members_link).content
+        content = urllib2.urlopen(list_members_link).read()
 
     check_h2(content, 'Error')
 
