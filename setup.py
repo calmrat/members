@@ -21,7 +21,6 @@ __scripts__ = ['bin/members']
 __irequires__ = [
     'functioncache',
     'argparse',
-    'beautifulsoup4',  # FIXME: shouldn't be a hard dep; mailman2 only
     'ClientForm',  # FIXME: shouldn't be a hard dep; mailman2 only
     'mechanize',  # FIXME: shouldn't be a hard dep; mailman2 only
     'pyyaml',

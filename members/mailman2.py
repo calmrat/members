@@ -9,7 +9,6 @@ import logging
 import re
 import sys
 
-from bs4 import BeautifulSoup
 import ClientForm
 import mechanize
 import requests as rq
@@ -21,15 +20,8 @@ logr = logging.getLogger(__name__)
 
 
 def check_h2(content, search_str):
-    # IN: string or bs4 object
-    if isinstance(content, str):
-        # convert to beautifulsoup
-        content = BeautifulSoup(content, 'html.parser')
-    h2s = [l.string for l in content.find_all('h2')]
-    if 'Error' in h2s:
-        # FIXME: get content from the following "<strong>" tag, which contains
-        # the details of the error
-        err = '#FIXME: replace with the actual error ^^^'
+    if re.search(r'<h2>{}<\/h2>'.format(search_str), content):
+        err = re.findall(r'(?<=<strong>).*(?=<\/strong>)', content)[0]
         logr.error(err)
         raise RuntimeError
 
@@ -56,8 +48,6 @@ def auth(list_link, user, password):
 
 
 def extract(args, config=None):
-    # BeautifulSoup find_all fails b/c of max recursion depth exceeded; bump it
-    sys.setrecursionlimit(10000)
 
     base_url = args.get('base_url') or config.get('base_url')
     list_name = args.get('list_name')
@@ -86,13 +76,11 @@ def extract(args, config=None):
         # if anyone can access to the list of members
         content = rq.get(list_members_link).content
 
-    content = BeautifulSoup(content, 'html.parser')
     check_h2(content, 'Error')
 
     # source contain list members page content
-    members_link = re.compile(r"\.\./options/%s/\S*redhat\.com" % (list_name))
+    list_members = re.findall(r'(?<=--at--redhat\.com">)(?<=>).*(?=<\/a>)', content)
 
-    users = ['@'.join(link.string.split(' at '))
-             for link in content.find_all(href=members_link)]
+    users = ['@'.join(mail.split(' at ')) for mail in list_members]
 
     return users
