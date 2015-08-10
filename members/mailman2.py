@@ -8,10 +8,9 @@ from __future__ import unicode_literals
 import logging
 import re
 import sys
+import urllib
 import urllib2
 import cookielib
-
-import ClientForm
 
 
 # load the root logger if it exists; or use the default if not already created
@@ -26,28 +25,26 @@ def check_h2(content, search_str):
         raise RuntimeError
 
 
-def auth(list_link, user, password):
-    logr.debug('AUTH {}:{}'.format(user, list_link))
-    cookieJar = cookielib.CookieJar()
+def get_content(list_link, user, password):
+    if user and password:
+        logr.debug('AUTH {}:{}'.format(user, list_link))
+        cookieJar = cookielib.CookieJar()
 
-    opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cookieJar))
-    opener.addheaders = [("User-agent", "Mozilla/5.0 (compatible)")]
-    urllib2.install_opener(opener)
-    forms = ClientForm.ParseResponse(
-        urllib2.urlopen(list_link), backwards_compat=False)
-    form = forms[2]
-    form['roster-email'] = user
-    form['roster-pw'] = password
+        opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cookieJar))
+        opener.addheaders = [("User-agent", "Mozilla/5.0 (compatible)")]
+        urllib2.install_opener(opener)
+
+        form = dict()
+        form['roster-email'] = user
+        form['roster-pw'] = password
+    form = form if 'form' in locals() else [] 
     try:
-        fp = urllib2.urlopen(form.click())
-        content = fp.read()
-        check_h2(content, 'Error')
-    finally:
-        fp.close()
+        return urllib2.urlopen(list_link, urllib.urlencode(form)).read()
+    except:
+        pass
 
 
 def extract(args, config=None):
-
     base_url = args.get('base_url') or config.get('base_url')
     list_name = args.get('list_name')
 
@@ -64,16 +61,9 @@ def extract(args, config=None):
             "base_url [{}] and list_name [{}] can not be NULL".format(
                 base_url, list_name))
 
-    list_link = "{}/listinfo/{}".format(base_url, list_name)
-    list_members_link = "{}/roster/{}".format(base_url, list_name)
+    list_link = "{}/roster/{}".format(base_url, list_name)
 
-    if list_user and list_password:
-        # auth is specified, use it
-        auth(list_link, list_user, list_password)
-        content = urllib2.urlopen(list_members_link).read()
-    else:
-        # if anyone can access to the list of members
-        content = urllib2.urlopen(list_members_link).read()
+    content = get_content(list_link, list_user, list_password)
 
     check_h2(content, 'Error')
 
