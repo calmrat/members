@@ -5,12 +5,12 @@
 
 from __future__ import unicode_literals
 
+import cookielib
 import logging
 import re
 import sys
 import urllib
 import urllib2
-import cookielib
 
 
 # load the root logger if it exists; or use the default if not already created
@@ -25,9 +25,9 @@ def check_h2(content, search_str):
         raise RuntimeError
 
 
-def get_content(list_link, user, password):
+def download(uri, user, password):
     if user and password:
-        logr.debug('AUTH {}:{}'.format(user, list_link))
+        logr.debug('AUTH {}:{}'.format(user, uri))
         cookieJar = cookielib.CookieJar()
 
         opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cookieJar))
@@ -37,11 +37,13 @@ def get_content(list_link, user, password):
         form = dict()
         form['roster-email'] = user
         form['roster-pw'] = password
-    form = form if 'form' in locals() else [] 
+    else:
+        form =  []
+
     try:
-        return urllib2.urlopen(list_link, urllib.urlencode(form)).read()
+        return urllib2.urlopen(uri, urllib.urlencode(form)).read()
     except:
-        pass
+        raise
 
 
 def extract(args, config=None):
@@ -50,26 +52,25 @@ def extract(args, config=None):
 
     lists = config.get('lists') or {}
     list_config = lists.get(list_name) or {}
-    list_user = args.get('user') or list_config.get('user')
-    list_password = args.get('password') or list_config.get('password')
+    user = args.get('user') or list_config.get('user')
+    password = args.get('password') or list_config.get('password')
 
     logr.debug(
-        '[{}] {}: {}'.format(base_url, list_name, list_user))
+        '[{}] {}: {}'.format(base_url, list_name, user))
 
     if not base_url and list_name:
         raise RuntimeError(
             "base_url [{}] and list_name [{}] can not be NULL".format(
                 base_url, list_name))
 
-    list_link = "{}/roster/{}".format(base_url, list_name)
-
-    content = get_content(list_link, list_user, list_password)
+    
+    list_url = "{}/roster/{}".format(base_url, list_name)
+    content = get_content(list_url, user, password)
 
     check_h2(content, 'Error')
 
     # source contain list members page content
-    list_members = re.findall(r'(?<=--at--redhat\.com">)(?<=>).*(?=<\/a>)', content)
-
-    users = ['@'.join(mail.split(' at ')) for mail in list_members]
+    users = re.findall(r'(?<=--at--redhat\.com">)(?<=>).*(?=<\/a>)', content)
+    users = ['@'.join(user.split(' at ')) for user in users]
 
     return users
