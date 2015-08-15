@@ -5,6 +5,7 @@ python:
   - "3.4"
 install:
   - "pip install coveralls virtualenv"
+  - "python setup.py develop"
 script: 
   - "coverage run --source=members -m py.test tests"
 after_success:
