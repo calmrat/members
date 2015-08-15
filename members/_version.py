@@ -5,5 +5,5 @@
 
 from __future__ import unicode_literals
 
-version_info = ('0', '0', '1')
+version_info = ('0', '0', '2')
 __version__ = '.'.join(version_info[0:3])  # + '-' + version_info[3]

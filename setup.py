@@ -28,6 +28,8 @@ __irequires__ = [
     'requests',
     'requests-kerberos',  # FIXME: shouldn't be a hard dep; orgchart3 only
     'pandas',  # FIXME: shouldn't be a hard dep; orgchart3 only
+    # FIXME: should be optional...
+    'pytest',
 ]
 pip_src = 'https://pypi.python.org/packages/src'
 __deplinks__ = []

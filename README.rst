@@ -56,4 +56,13 @@ OrgChart 3
 ----------
 
 Example usage, for OrgChart 3::
+
     members orgchart3 teamlead cward
+
+
+
+TESTING
+=======
+Testing is py.test based. Run with::
+
+    py.test tests/ -v

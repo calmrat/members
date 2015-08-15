@@ -2,7 +2,12 @@
 # -*- coding: utf-8 -*-
 # Author: "Chris Ward" <cward@redhat.com>
 
-''' OrgChart CSV exporter Script. Requires Kereberos AUTH (kinit) '''
+'''
+OrgChart3 CSV exporter Script.
+
+Supported AUthentication:
+    Kereberos AUTH (kinit)
+'''
 
 
 from getpass import getuser
@@ -19,6 +24,7 @@ from requests_kerberos import HTTPKerberosAuth, OPTIONAL
 
 logr = logging.getLogger(__name__)
 
+# UPDATES HERE REQUIRE UPDATES IN TESTS/test_orgchart3.py
 GET_ARGS = {
     'direct': 'true',
     'indirect': 'true',
@@ -42,6 +48,9 @@ GET_ARGS = {
 # note this leaves garbage in ~/.functioncache that might need to be cleaned
 @functioncache(1 * 60 * 60)  # cache for 1 hour
 def download(uri, user=None, password=None, saveas=None, ssl_verify=False):
+    '''
+    FIXME: DOCS...
+    '''
     # FIXME: use a tempfile
     saveas = saveas or '/tmp/requests_tmp.csv'
 
@@ -63,6 +72,9 @@ def download(uri, user=None, password=None, saveas=None, ssl_verify=False):
 
 
 def extract(args, config=None):
+    '''
+    FIXME: DOCS...
+    '''
     uid = args.get('name') or getuser()
     base_url = args.get('base_url') or config.get('base_url') or {}
     export_url = os.path.join(base_url, 'export_csv')
@@ -78,7 +90,8 @@ def extract(args, config=None):
     csv_path = download(uri)
 
     members_df = pd.read_csv(csv_path)
-    #is_brq = lambda x: bool('Brno' in x or 'Czech' in x)
+    # FIXME: old, unused code...
+    # is_brq = lambda x: bool('Brno' in x or 'Czech' in x)
 
     users = list(members_df['Kerberos'].unique())
 
