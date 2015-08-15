@@ -1,8 +1,8 @@
 language: python
 python:
   - "2.7"
-  - "3.3"
-  - "3.4"
+    #  - "3.3"  # ## SEE BELOW FOR EXPLANATION
+    #  - "3.4"  # ## SEE BELOW FOR EXPLANATION
 install:
   - "pip install coveralls virtualenv"
   - "python setup.py develop"
@@ -10,3 +10,31 @@ script:
   - "coverage run --source=members -m py.test tests"
 after_success:
   - coveralls
+
+
+##########
+# Python 3.3, 3.4 aren't building; they fail on python-kerberos.
+##########
+# Best match: requests-kerberos 0.7.0
+# Downloading https://pypi.python.org/packages/source/r/requests-kerberos/requests-kerberos-0.7.0.tar.gz#md5=d7cde195a95536c83a2ffd8a7050be4c
+# Processing requests-kerberos-0.7.0.tar.gz
+# Writing /tmp/easy_install-gqrkkyrt/requests-kerberos-0.7.0/setup.cfg
+# Running requests-kerberos-0.7.0/setup.py -q bdist_egg --dist-dir /tmp/easy_install-gqrkkyrt/requests-kerberos-0.7.0/egg-dist-tmp-1739e0qq
+# Traceback (most recent call last):
+#   File "/home/travis/virtualenv/python3.4.2/lib/python3.4/site-packages/setuptools/sandbox.py", line 150, in save_modules
+#     yield saved
+#   File "/home/travis/virtualenv/python3.4.2/lib/python3.4/site-packages/setuptools/sandbox.py", line 191, in setup_context
+#     yield
+#   File "/home/travis/virtualenv/python3.4.2/lib/python3.4/site-packages/setuptools/sandbox.py", line 235, in run_setup
+#     DirectorySandbox(setup_dir).run(runner)
+#   File "/home/travis/virtualenv/python3.4.2/lib/python3.4/site-packages/setuptools/sandbox.py", line 265, in run
+#     return func()
+#   File "/home/travis/virtualenv/python3.4.2/lib/python3.4/site-packages/setuptools/sandbox.py", line 234, in runner
+#     _execfile(setup_script, ns)
+#   File "/home/travis/virtualenv/python3.4.2/lib/python3.4/site-packages/setuptools/sandbox.py", line 46, in _execfile
+#     exec(code, globals, locals)
+#   File "/tmp/easy_install-gqrkkyrt/requests-kerberos-0.7.0/setup.py", line 58, in <module>
+#     'Programming Language :: Python :: 2.7',
+#   File "/tmp/easy_install-gqrkkyrt/requests-kerberos-0.7.0/setup.py", line 45, in get_version
+#     default_setup = dict(
+# TypeError: 'filter' object is not subscriptable
