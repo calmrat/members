@@ -1,3 +1,7 @@
+.. image:: https://travis-ci.org/kejbaly2/members.png
+   :target: https://travis-ci.org/kejbaly2/members
+
+
 INSTALLATION
 ============
 Example install, using VirtualEnv::
