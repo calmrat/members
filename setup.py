@@ -19,7 +19,7 @@ __provides__ = ['members']
 __desc__ = 'Get membership details from various data sources.'
 __scripts__ = ['bin/members']
 __irequires__ = [
-    'filecache',
+    'functioncache',
     'argparse',
     'beautifulsoup4',  # FIXME: shouldn't be a hard dep; mailman2 only
     'ClientForm',  # FIXME: shouldn't be a hard dep; mailman2 only
