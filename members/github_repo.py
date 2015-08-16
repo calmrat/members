@@ -37,8 +37,11 @@ def _logins(users, user_attrs=None):
     _users = {}
     for u in users:
         l = u.login
+        logr.debug('LOGIN: {}'.format(l))
         _users[l] = {}
         for a in user_attrs:
+            logr.debug('user: {}'.format(u))
+            logr.debug('attr: {}'.format(a))
             _users[l][a] = getattr(u, a)
     return _users
 
@@ -52,22 +55,18 @@ def extract(args=None, config=None):
     user = sargs.user
 
     # eg, login, email; user.ATTR to return as ['member', 'member', ... ']
-    user_attrs = args.get('user_attrs')
+    user_attrs = args.get('user_attrs') or []
     if not isinstance(user_attrs, list):
         user_attrs = [user_attrs]
 
-    try:
-        # SPECIAL CASE - Always get logins
-        login_i = user_attrs.index('login')
-        if login_i >= 0:
+    # SPECIAL CASE - Always get logins
+    if 'login' in user_attrs:
+        if user_attrs.index('login') >= 0:
             # get this out of the remaining attrs to parse
-            user_attrs.pop(login_i)
-    except ValueError:
-        # login isn't include, doesn't matter, we're running it anyway
-        pass
+            del user_attrs[user_attrs.index('login')]
 
     if not user_attrs:
-        user_attrs = config.get('user_attrs')
+        user_attrs = config.get('user_attrs') or []
 
     logr.debug("user_attrs: {}".format(user_attrs))
 
