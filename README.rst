@@ -1,7 +1,7 @@
 .. image:: https://travis-ci.org/kejbaly2/members.png
    :target: https://travis-ci.org/kejbaly2/members
 
-.. image:: https://coveralls.io/repos/kejbaly2/members.png 
+.. image:: https://coveralls.io/repos/kejbaly2/members/badge.svg
    :target: https://coveralls.io/r/kejbaly2/members
 
 
