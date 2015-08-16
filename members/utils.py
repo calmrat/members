@@ -6,12 +6,9 @@
 # PY3 COMPAT
 from __future__ import unicode_literals, absolute_import
 
+from getpass import getuser
 import logging
 import os
-import re
-
-# INTERNAL PYTHON MODULES
-import argparse
 
 # EXTERNALLY INSTALLED
 import yaml
@@ -26,87 +23,44 @@ with open(CONFIG_FILE) as _:
     config = yaml.load(_)
 
 
-def exclude(users, exclude):
-    users = users or []
-    exclude = exclude or []
-
-    if not exclude:
-        return users
-
-    # expecting 1+ patterns to match against
-    ex_res = [re.compile(x) for x in exclude]
-
-    excluded = set()
-    for u in users:
-        for pattern in ex_res:
-            if pattern.search(u):
-                excluded.add(u)
-
-    users = set(users) - excluded
-    logr.debug("{} members EXCLUDED".format(len(excluded)))
-    return list(users)
-
-
-def parse_cli():
+class StandardArgs(object):
     '''
-    members "public" CLI API
+    FIXME: DOCS...
     '''
-    # Setup the argparser
-    parser = argparse.ArgumentParser(
-        description='Get list of members from various data sources')
-    subparsers = parser.add_subparsers(help='Datasources', dest='src')
+    uid = None
+    password = None
+    base_url = None
 
-    parser.add_argument('-o', metavar='o', nargs='?',
-                        dest='output', help='Output file')
-    parser.add_argument('-v', '--verbose', action='store_true',
-                        help="turn verbose logging ON")
-    parser.add_argument('-d', '--debug', action='store_true',
-                        help="turn debug logging ON")
-    # FIXME SUPPORT excluding users from the final list before printing
-    parser.add_argument('-x', '--exclude', metavar='USER', nargs='+',
-                        help="exclude results users by pattern")
+    def __init__(self, args=None, config=None):
+        '''
+        FIXME: DOCS...
+        '''
+        self._args, self._config = args or {}, config or {}
+        logr.debug('CREATING STANDARD ARGS')
+        logr.debug(' ... args: {}'.format(args))
+        logr.debug(' ... config: {}'.format(config))
+        self.user = self.get('user', getuser())
+        self.password = self.get('password')
+        self.base_url = self.get('base_url')
+        self.kind = self.get('kind')
 
-    # Mailman 2
-    mm2 = subparsers.add_parser('mailman2')
-    mm2.add_argument('list_name', metavar='S',
-                     help='Mailman 2 list name')
-    mm2.add_argument('-B', '--base-url', metavar='URL',
-                     help='URL to Mailman2 list-serve')
-    mm2.add_argument('-u', '--user', metavar='USER',
-                     help='Username to login with')
-    mm2.add_argument('-p', '--password', metavar='PASS',
-                     help='Password to login with')
+    def get(self, key, default=None):
+        user_value = self._args.get(key) or self._config.get(key)
+        if hasattr(default, '__call__'):
+            value = user_value or default()
+        else:
+            value = user_value or default
+        return value
 
-    # Orgchart 3
-    # SUPPORTS KERBEROS LOGIN ONLY FOR NOW
-    oc3 = subparsers.add_parser('orgchart3')
-    # FIXME: support by group
-    oc3.add_argument('type', metavar='TYPE', choices=['teamlead'],
-                     help='Orgchart3 grouping type')
-    oc3.add_argument('name', metavar='NAME',
-                     help='Orgchart3 type name (eg, team x)')
-    # oc3.add_argument('-f', '--filter', metavar='FILTER', choices=['location']
-    #                 help='Orgchart3 member filters')
-    oc3.add_argument('-B', '--base-url', metavar='URL',
-                     help='URL to Mailman2 list-serve')
-    oc3.add_argument('-NDED', '--no-default-email-domain', action='store_true',
-                     help="don't append default email to usernames")
-    oc3.add_argument('-DED', '--default-email-domain',
-                     help="default email domain (eg: @example.com)")
 
-    # Github API - Github repo members
-    g = subparsers.add_parser('github_repo')
-    g.add_argument('uri',
-                   help='Github "[user|group]/repo" resource uri')
-    g.add_argument('who',
-                   choices=['collaborators', 'assignees', 'contributors',
-                            'stargazers', 'teams', 'watchers'],
-                   help='Github repository name')
-    g.add_argument('user_attr',
-                   nargs='?',
-                   choices=['email', 'login'],
-                   default='email',
-                   help='Github User attribute (default: email)')
+def request_password(user=None):
+    user = user or ''
+    # http://stackoverflow.com/a/27293138/1289080
+    try:
+        input = raw_input
+    except NameError:  # Python 3
+        pass
+    #############################################
 
-    args = vars(parser.parse_args())  # parse and load args as a dict
-    return args
+    password = input('[{}] password: '.format(user))
+    return password

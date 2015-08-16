@@ -6,7 +6,6 @@
 # PY3 COMPAT
 from __future__ import unicode_literals, absolute_import
 
-#import instructions as i
 from instructions import commands, datatypes
 
 TEST_REPO = 'kejbaly2/members'
@@ -39,7 +38,10 @@ def test_default_auth_good():
 
     # see: https://github.com/maxtepkeev/instructions
     # see: http://bit.ly/maxtepkeev_instructions_eupy15
-    results = commands.count(datatypes.string).inside(users)
+    result = commands.count(datatypes.string).inside(users)
+    if not result >= 1:
+        raise RuntimeError(
+            "Expeted more than one assignee, got {}".format(result))
 
     # contributors should not require authenticated user to call
     args['who'] = 'contributors'

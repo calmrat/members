@@ -9,72 +9,38 @@ Github API repo membership
 # PY3 COMPAT
 from __future__ import unicode_literals, absolute_import
 
-from getpass import getuser
 import logging
 
 from github import Github
 
+from members.utils import StandardArgs
+
 logr = logging.getLogger(__name__)
 
 
-# FIXME: move to (auth) utils
-def request_password(user=None):
-    user = user or ''
-    # http://stackoverflow.com/a/27293138/1289080
-    try:
-        input = raw_input
-    except NameError:  # Python 3
-        pass
-    #############################################
-
-    password = input('[{}] password: '.format(user))
-    return password
-
-
-# FIXME: Add to utils
-class StandardArgs(object):
+def _logins(users, user_attrs=None):
     '''
     FIXME: DOCS...
     '''
-    uid = None
-    password = None
-    base_url = None
+    # FIXME: check for support attrs
+    # Supported attrs:
+    # login  # DEFAULT, no auth required
+    # email
+    # bio
+    # company
+    # created_at
+    # hireable
+    # location
+    # updated_at
+    # url
 
-    def __init__(self, args=None, config=None):
-        '''
-        FIXME: DOCS...
-        '''
-        self._args, self._config = args or {}, config or {}
-        logr.debug('CREATING STANDARD ARGS')
-        logr.debug(' ... args: {}'.format(args))
-        logr.debug(' ... config: {}'.format(config))
-        self.user = self.get('user', getuser())
-        self.password = self.get('password')
-        self.base_url = self.get('base_url')
-        self.kind = self.get('kind')
-
-    def get(self, key, default=None):
-        user_value = self._args.get(key) or self._config.get(key)
-        if hasattr(default, '__call__'):
-            value = user_value or default()
-        else:
-            value = user_value or default
-        return value
-
-
-def _logins(users, attr=None):
-    '''
-    FIXME: DOCS...
-    '''
-    ATTRS = {
-        'login': lambda x: x.login,
-        'email': lambda x: x.email,
-    }
-
-    attr = attr or 'login'
-    attr_fun = ATTRS[attr]
-    users = [attr_fun(u) for u in users]
-    return users
+    _users = {}
+    for u in users:
+        l = u.login
+        _users[l] = {}
+        for a in user_attrs:
+            _users[l][a] = getattr(u, a)
+    return _users
 
 
 def extract(args=None, config=None):
@@ -86,7 +52,24 @@ def extract(args=None, config=None):
     user = sargs.user
 
     # eg, login, email; user.ATTR to return as ['member', 'member', ... ']
-    user_attr = args.get('user_attr')
+    user_attrs = args.get('user_attrs')
+    if not isinstance(user_attrs, list):
+        user_attrs = [user_attrs]
+
+    try:
+        # SPECIAL CASE - Always get logins
+        login_i = user_attrs.index('login')
+        if login_i >= 0:
+            # get this out of the remaining attrs to parse
+            user_attrs.pop(login_i)
+    except ValueError:
+        # login isn't include, doesn't matter, we're running it anyway
+        pass
+
+    if not user_attrs:
+        user_attrs = config.get('user_attrs')
+
+    logr.debug("user_attrs: {}".format(user_attrs))
 
     # use token if available, otherwise, password
     if 'token' in config:
@@ -96,7 +79,7 @@ def extract(args=None, config=None):
         password = sargs.password
 
     if user and password:
-        logr.debug("AUTHENTICATING USER: {}".format(user))
+        logr.debug("AUTHENTICATING USER (WITH PASSOWRD): {}".format(user))
         g = Github(user, password)
     else:
         if user:
@@ -114,7 +97,7 @@ def extract(args=None, config=None):
 
     # DEFAULT to contributors if who isn't set to avoid an error
     # contributors shouldn't require authentication
-    who = args.get('who', 'contributors')
+    who = args.get('who', 'assignees')
 
     # List of Github API calls available
     WHO = {
@@ -126,10 +109,10 @@ def extract(args=None, config=None):
         'watchers': lambda x: x.get_watchers(),
     }
 
-    if not who in WHO.keys():
+    if who not in WHO.keys():
         raise RuntimeError("Unknown members target [{}]".format(who))
 
-    caller = WHO[who]
-    members = _logins(users=caller(repo), attr=user_attr)
+    users = WHO[who](repo)
+    members = _logins(users=users, user_attrs=user_attrs)
 
     return members

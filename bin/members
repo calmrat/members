@@ -6,17 +6,104 @@
 # PY3 COMPAT
 from __future__ import unicode_literals, absolute_import
 
+# INTERNAL PYTHON MODULES
+import argparse
+import logging
+import pandas as pd
+
+from members.utils import config, logr
+
+
 # TODO #
 # Do you need some cashing with max execution around 8 sec?
 
 
-if __name__ == "__main__":
-    from members.utils import config, logr, exclude, parse_cli
+def _exclude(users, exclude):
+    logr.debug('EXCLUDING USERS...')
+    assert isinstance(users, pd.DataFrame)
 
-    # Load the user config file from their home directory
-    args = parse_cli()
+    exclude = exclude or []
+    assert isinstance(exclude, list)
 
-    # MOVE TO parse_cli IN SEPARATE BRANCH:COMMIT ###
+    if not exclude:
+        logr.debug(' ... NO USERS TO EXCLUDE')
+        return users
+
+    k_before = len(users)
+    users = users[~users.index.isin(exclude)]
+    k_after = len(users)
+    k_excluded = k_before - k_after
+    logr.debug("{} members EXCLUDED".format(k_excluded))
+    return users
+
+
+def parse_cli():
+    '''
+    members "public" CLI API
+    '''
+    # Setup the argparser
+    parser = argparse.ArgumentParser(
+        description='Get list of members from various data sources')
+    subparsers = parser.add_subparsers(help='Datasources', dest='src')
+
+    parser.add_argument('-o', metavar='o', nargs='?',
+                        dest='output', help='Output file')
+    parser.add_argument('-v', '--verbose', action='store_true',
+                        help="turn verbose logging ON")
+    parser.add_argument('-d', '--debug', action='store_true',
+                        help="turn debug logging ON")
+    # FIXME SUPPORT excluding users from the final list before printing
+    parser.add_argument('-x', '--exclude', metavar='USER', nargs='+',
+                        help="exclude results users by pattern")
+
+    # Mailman 2
+    mm2 = subparsers.add_parser('mailman2')
+    mm2.add_argument('list_name', metavar='S',
+                     help='Mailman 2 list name')
+    mm2.add_argument('-B', '--base-url', metavar='URL',
+                     help='URL to Mailman2 list-serve')
+    mm2.add_argument('-u', '--user', metavar='USER',
+                     help='Username to login with')
+    mm2.add_argument('-p', '--password', metavar='PASS',
+                     help='Password to login with')
+
+    # Orgchart 3
+    # SUPPORTS KERBEROS LOGIN ONLY FOR NOW
+    oc3 = subparsers.add_parser('orgchart3')
+    # FIXME: support by group
+    oc3.add_argument('type', metavar='TYPE', choices=['teamlead'],
+                     help='Orgchart3 grouping type')
+    oc3.add_argument('name', metavar='NAME',
+                     help='Orgchart3 type name (eg, team x)')
+    # oc3.add_argument('-f', '--filter', metavar='FILTER', choices=['location']
+    #                 help='Orgchart3 member filters')
+    oc3.add_argument('-B', '--base-url', metavar='URL',
+                     help='URL to Mailman2 list-serve')
+    oc3.add_argument('-NDED', '--no-default-email-domain', action='store_true',
+                     help="don't append default email to usernames")
+    oc3.add_argument('-DED', '--default-email-domain',
+                     help="default email domain (eg: @example.com)")
+
+    # Github API - Github repo members
+    g = subparsers.add_parser('github_repo')
+    g.add_argument('uri',
+                   help='Github "[user|group]/repo" resource uri')
+    g.add_argument('who',
+                   nargs='?',
+                   choices=['assignees', 'collaborators', 'contributors',
+                            'stargazers', 'teams', 'watchers'],
+                   help='Github repository name')
+    g.add_argument('user_attrs',
+                   nargs='*',
+                   choices=['login', 'email', 'bio', 'company',
+                            'created_at', 'hireable', 'location',
+                            'updated_at', 'url'],
+                   default='login',
+                   help='Github User attribute (default: login)')
+
+    args = vars(parser.parse_args())  # parse and load args as a dict
+
+    # Go ahead and deal with logging debug/verbosity setting
     if args['debug']:
         # logr = logging.getLogger()  # get root logger
         logr.setLevel(logging.DEBUG)
@@ -24,7 +111,13 @@ if __name__ == "__main__":
         logr.setLevel(logging.INFO)
     else:
         logr.setLevel(logging.WARN)
-    #######################
+
+    return args
+
+
+if __name__ == "__main__":
+    # Load the user config file from their home directory
+    args = parse_cli()
 
     output_file = args['output']
 
@@ -48,10 +141,33 @@ if __name__ == "__main__":
     else:
         raise RuntimeError("Unknown datasource [{}]".format(src))
 
-    # remove users that match the exclude patterns
-    users = exclude(users, args['exclude'])
+    if isinstance(users, dict):
+        users = pd.DataFrame(users).T
+        users.index.name = 'login'
+    else:
+        # otherwise we should expect a list of users
+        assert isinstance(users, list)
+        users = pd.Series(users)
 
-    output = '\n'.join(users) if users else ''
+    # remove users that match the exclude patterns
+    users = _exclude(users, args['exclude'])
+
+    # get name of the type of user attribute we're returning
+    user_attrs = args['user_attrs']
+    try:
+        # SPECIAL CASE - Always get logins
+        login_i = user_attrs.index('login')
+        if login_i:
+            # get this out of the remaining attrs to parse
+            user_attrs.pop(login_i)
+    except ValueError:
+        # login isn't include, doesn't matter, we're running it anyway
+        pass
+
+    # FIXME: make configurable
+    export_as = 'csv'
+    if export_as == 'csv':
+        output = users.to_csv()
 
     if output_file:
         with open(output_file, 'wb') as f:
@@ -59,4 +175,5 @@ if __name__ == "__main__":
     else:
         print(output)
 
-    logr.info('{} members found for {}'.format(len(users), src))
+    k_users = len(users)
+    logr.info('{} found for {}'.format(k_users, src))

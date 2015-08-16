@@ -47,3 +47,6 @@ nosetests.xml
 docs/build
 # Generated source-code documentation
 docs/source/source_codes
+
+#pytest-pep8
+.cache

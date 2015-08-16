@@ -37,6 +37,12 @@ Example configuration::
                 password: dasdf458@1j
             dept-list:
 
+    github:
+        user: kejbaly2
+        token: FGIOUSODIUGSDGJ
+        # password: ********
+        user_attrs: [email, bio, url]
+
     orgchart:
         base_url: http://some.domain.com/orgchart3
 
