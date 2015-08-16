@@ -2,6 +2,9 @@
 # -*- coding: utf-8 -*-
 # Author: "Chris Ward" <cward@redhat.com>
 
+# PY3 COMPAT
+from __future__ import unicode_literals, absolute_import
+
 from setuptools import setup
 
 VERSION_FILE = "members/_version.py"

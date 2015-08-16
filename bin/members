@@ -3,105 +3,28 @@
 # vim: tabstop=4 expandtab shiftwidth=4 softtabstop=4
 # Author: "Chris Ward" <cward@redhat.com>
 
-from __future__ import unicode_literals
-
-# INTERNAL PYTHON MODULES
-import argparse
-import logging
-import os
-import re
-
-# EXTERNALLY INSTALLED
-from bs4 import BeautifulSoup
-import requests as rq
-import yaml
+# PY3 COMPAT
+from __future__ import unicode_literals, absolute_import
 
 # TODO #
 # Do you need some cashing with max execution around 8 sec?
 
-# Load logging before anything else
-logging.basicConfig(format='>> %(message)s')
-logr = logging.getLogger('members')
-
-
-def parse_cli():
-    # Setup the argparser
-    parser = argparse.ArgumentParser(
-        description='Get list of members from various data sources')
-    subparsers = parser.add_subparsers(help='Datasources', dest='src')
-
-    parser.add_argument('-o', metavar='o', nargs='?',
-                        dest='output', help='Output file')
-    parser.add_argument('-v', '--verbose', action='store_true',
-                        help="turn verbose logging ON")
-    parser.add_argument('-d', '--debug', action='store_true',
-                        help="turn debug logging ON")
-    # FIXME SUPPORT excluding users from the final list before printing
-    parser.add_argument('-x', '--exclude', metavar='USER', nargs='+',
-                        help="exclude results users by pattern")
-
-    mm2 = subparsers.add_parser('mailman2')
-    mm2.add_argument('list_name', metavar='S', help='Mailman 2 list name')
-    mm2.add_argument('-B', '--base-url', metavar='URL', help='URL to Mailman2 list-serve')
-    mm2.add_argument('-u', '--user', metavar='USER', help='Username to login with')
-    mm2.add_argument('-p', '--password', metavar='PASS', help='Password to login with')
-
-    # SUPPORTS KERBEROS LOGIN ONLY FOR NOW
-    oc3 = subparsers.add_parser('orgchart3')
-    # FIXME: support by group
-    oc3.add_argument('type', metavar='TYPE', choices=['teamlead'],
-                     help='Orgchart3 grouping type')
-    oc3.add_argument('name', metavar='NAME', help='Orgchart3 type name (eg, team x)')
-    #oc3.add_argument('-f', '--filter', metavar='FILTER', choices=['location']
-    #                 help='Orgchart3 member filters')
-    oc3.add_argument('-B', '--base-url', metavar='URL', help='URL to Mailman2 list-serve')
-    oc3.add_argument('-NDED', '--no-default-email-domain', action='store_true',
-                     help="don't append default email to usernames")
-    oc3.add_argument('-DED', '--default-email-domain',
-                     help="default email domain (eg: @example.com)")
-
-
-    args = vars(parser.parse_args())  # parse and load args as a dict
-    return args
-
-
-def exclude(users, exclude):
-    users = users or []
-    exclude = exclude or []
-
-    if not exclude:
-        return users
-
-    # expecting 1+ patterns to match against
-    ex_res = [re.compile(x) for x in exclude]
-
-    excluded = set()
-    for u in users:
-        for pattern in ex_res:
-            if pattern.search(u):
-                excluded.add(u)
-
-    users = set(users) - excluded
-    logr.debug("{} members EXCLUDED".format(len(excluded)))
-    return list(users)
-
-
 
 if __name__ == "__main__":
-    # Load the user config file from their home directory
-    CONFIG_FILE = os.path.expanduser('~/.members')
-    with open(CONFIG_FILE) as _:
-        config = yaml.load(_)
+    from members.utils import config, logr, exclude, parse_cli
 
+    # Load the user config file from their home directory
     args = parse_cli()
 
+    # MOVE TO parse_cli IN SEPARATE BRANCH:COMMIT ###
     if args['debug']:
-        #logr = logging.getLogger()  # get root logger
+        # logr = logging.getLogger()  # get root logger
         logr.setLevel(logging.DEBUG)
     elif args['verbose']:
         logr.setLevel(logging.INFO)
     else:
         logr.setLevel(logging.WARN)
+    #######################
 
     output_file = args['output']
 
@@ -110,13 +33,18 @@ if __name__ == "__main__":
     # load the data source specific config options
     src_config = config[src]
 
+    # FIXME:  for p in plugins: p.extract()
+    # add 'activated plugins' to config;
     if src == 'mailman2':
-        # MAILMAN 2 member extraction
-        from members import mailman2 as mm2
-        users = mm2.extract(args, src_config)
+        # MAILMAN 2 list member extraction
+        from members import mailman2
+        users = mailman2.extract(args, src_config)
     elif src == 'orgchart3':
-        from members import orgchart3 as oc3
-        users = oc3.extract(args, src_config)
+        from members import orgchart3
+        users = orgchart3.extract(args, src_config)
+    elif src == 'github_repo':
+        from members import github_repo
+        users = github_repo.extract(args, src_config)
     else:
         raise RuntimeError("Unknown datasource [{}]".format(src))
 
@@ -131,4 +59,4 @@ if __name__ == "__main__":
     else:
         print(output)
 
-    logr.info('{} members SAVED'.format(len(users)))
+    logr.info('{} members found for {}'.format(len(users), src))

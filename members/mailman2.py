@@ -3,7 +3,8 @@
 # vim: tabstop=4 expandtab shiftwidth=4 softtabstop=4
 # Author: "Eduard Trott" <etrott@redhat.com>
 
-from __future__ import unicode_literals
+# PY3 COMPAT
+from __future__ import unicode_literals, absolute_import
 
 import cookielib
 import logging
@@ -63,7 +64,7 @@ def extract(args, config=None):
             "base_url [{}] and list_name [{}] can not be NULL".format(
                 base_url, list_name))
 
-    
+
     list_url = "{}/roster/{}".format(base_url, list_name)
     content = get_content(list_url, user, password)
 

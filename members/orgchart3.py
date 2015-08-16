@@ -9,6 +9,8 @@ Supported AUthentication:
     Kereberos AUTH (kinit)
 '''
 
+# PY3 COMPAT
+from __future__ import unicode_literals, absolute_import
 
 from getpass import getuser
 import logging
