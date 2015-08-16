@@ -32,6 +32,7 @@ __irequires__ = [
     'pytest',
     'instructions',
     # 'pytest-pep8',  # run with `py.test --pep8 ...`
+    'PyGithub',
 ]
 pip_src = 'https://pypi.python.org/packages/src'
 __deplinks__ = []
