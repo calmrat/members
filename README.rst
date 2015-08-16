@@ -73,6 +73,14 @@ Example usage, for OrgChart 3::
     members orgchart3 teamlead cward
 
 
+BUILD DOCS
+==========
+
+Example scenario for building docs with sphinx::
+
+    cd docs
+    make html
+
 
 TESTING
 =======

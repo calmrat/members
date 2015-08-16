@@ -33,6 +33,8 @@ __irequires__ = [
     'instructions',
     # 'pytest-pep8',  # run with `py.test --pep8 ...`
     'PyGithub',
+    # docs
+    'sphinx',
 ]
 pip_src = 'https://pypi.python.org/packages/src'
 __deplinks__ = []
