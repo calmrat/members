@@ -19,8 +19,11 @@ logr = logging.getLogger('members')
 
 ''' Load the config file so modules can import and reuse '''
 CONFIG_FILE = os.path.expanduser('~/.members')
-with open(CONFIG_FILE) as _:
-    config = yaml.load(_)
+if os.path.exists(CONFIG_FILE):
+    with open(CONFIG_FILE) as _:
+        config = yaml.load(_)
+else:
+    config = {}
 
 
 class StandardArgs(object):
