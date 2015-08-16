@@ -30,7 +30,7 @@ __irequires__ = [
     'pandas',  # FIXME: shouldn't be a hard dep; orgchart3 only
     # FIXME: should be optional...
     'pytest',
-    'pytest-pep8',  # run with `py.test --pep8 ...`
+    # 'pytest-pep8',  # run with `py.test --pep8 ...`
 ]
 pip_src = 'https://pypi.python.org/packages/src'
 __deplinks__ = []
