@@ -9,13 +9,9 @@ from __future__ import unicode_literals, absolute_import
 import cookielib
 import logging
 import re
-import sys
 import urllib
 import urllib2
 
-
-# load the root logger if it exists; or use the default if not already created
-logging.basicConfig()
 logr = logging.getLogger(__name__)
 
 
@@ -26,7 +22,10 @@ def check_h2(content, search_str):
         raise RuntimeError
 
 
-def download(uri, user, password):
+def mm2_download(uri, user, password):
+    '''
+    # FIXME DOCS
+    '''
     if user and password:
         logr.debug('AUTH {}:{}'.format(user, uri))
         cookieJar = cookielib.CookieJar()
@@ -39,15 +38,15 @@ def download(uri, user, password):
         form['roster-email'] = user
         form['roster-pw'] = password
     else:
-        form =  []
+        form = []
 
-    try:
-        return urllib2.urlopen(uri, urllib.urlencode(form)).read()
-    except:
-        raise
+    return urllib2.urlopen(uri, urllib.urlencode(form)).read()
 
 
 def extract(args, config=None):
+    '''
+    # FIXME DOCS
+    '''
     base_url = args.get('base_url') or config.get('base_url')
     list_name = args.get('list_name')
 
@@ -59,19 +58,19 @@ def extract(args, config=None):
     logr.debug(
         '[{}] {}: {}'.format(base_url, list_name, user))
 
-    if not base_url and list_name:
+    if not (base_url or list_name):
         raise RuntimeError(
             "base_url [{}] and list_name [{}] can not be NULL".format(
                 base_url, list_name))
 
-
     list_url = "{}/roster/{}".format(base_url, list_name)
-    content = get_content(list_url, user, password)
+    content = mm2_download(list_url, user, password)
 
+    # Check for and report any errors return in the HTML
     check_h2(content, 'Error')
 
     # source contain list members page content
     users = re.findall(r'(?<=--at--redhat\.com">)(?<=>).*(?=<\/a>)', content)
-    users = ['@'.join(user.split(' at ')) for user in users]
+    users = ['@'.join(u.split(' at ')) for u in users]
 
     return users

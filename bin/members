@@ -20,6 +20,9 @@ from members.utils import config, logr
 
 def _exclude(users, exclude):
     logr.debug('EXCLUDING USERS...')
+    if isinstance(users, (pd.Series, list)):
+        users = pd.DataFrame(index=users)
+
     assert isinstance(users, pd.DataFrame)
 
     exclude = exclude or []
@@ -153,7 +156,7 @@ if __name__ == "__main__":
     users = _exclude(users, args['exclude'])
 
     # get name of the type of user attribute we're returning
-    user_attrs = args['user_attrs']
+    user_attrs = args.get('user_attrs') or []
     try:
         # SPECIAL CASE - Always get logins
         login_i = user_attrs.index('login')
