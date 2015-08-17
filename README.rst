@@ -87,3 +87,11 @@ TESTING
 Testing is py.test based. Run with::
 
     py.test tests/ -v
+
+
+DEVELOPMENT
+===========
+Install the supplied githooks; eg, ::
+
+    ln -s ~/repos/members/_githooks/commit-msg ~/repos/members/.git/hooks/commit-msg
+    ln -s ~/repos/members/_githooks/pre-commit ~/repos/members/.git/hooks/pre-commit

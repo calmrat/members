@@ -9,6 +9,8 @@ from __future__ import unicode_literals, absolute_import
 from getpass import getuser
 import logging
 import os
+import subprocess
+import sys
 
 # EXTERNALLY INSTALLED
 import yaml
@@ -67,3 +69,21 @@ def request_password(user=None):
 
     password = input('[{}] password: '.format(user))
     return password
+
+
+def run(cmd):
+    cmd = cmd if isinstance(cmd, list) else cmd.split()
+    try:
+        process = subprocess.Popen(
+            cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    except Exception as error:
+        logr.error("'{0}' failed: {1}".format(cmd, error))
+        raise
+    output, errors = process.communicate()
+    if process.returncode != 0 or errors:
+        if output:
+            logr.error(output)
+        if errors:
+            logr.error(errors)
+        sys.exit(process.returncode)
+    return output, errors
