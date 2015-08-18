@@ -22,18 +22,23 @@ __provides__ = ['members']
 __desc__ = 'Get membership details from various data sources.'
 __scripts__ = ['bin/members']
 __irequires__ = [
+    # CORE DEPENDENCIES
     'functioncache',
     'argparse',
     'pyyaml',
     'requests',
-    'requests-kerberos',  # FIXME: shouldn't be a hard dep; orgchart3 only
-    'pandas',  # FIXME: shouldn't be a hard dep; orgchart3 only
+    'requests-kerberos',
+    'pandas',
     # FIXME: should be optional...
+    # TESTING
     'pytest',
+    'pytest-pep8',  # run with `py.test --pep8 ...`
     'instructions',
-    # 'pytest-pep8',  # run with `py.test --pep8 ...`
+    # FIXME: should be optional...
+    # GITHUB
     'PyGithub',
-    # docs
+    # FIXME: should be optional...
+    # DOCS
     'sphinx',
 ]
 pip_src = 'https://pypi.python.org/packages/src'
