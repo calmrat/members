@@ -17,8 +17,9 @@ logr = logging.getLogger(__name__)
 
 def check_h2(content, search_str):
     if re.search(r'<h2>{}<\/h2>'.format(search_str), content):
-        err = re.findall(r'(?<=<strong>).*(?=<\/strong>)', content)[0]
-        logr.error(err)
+        err = re.findall(r'(?<=<strong>).*(?=<\/strong>)', content)
+        if not err:
+            logr.error(err[0])
         raise RuntimeError
 
 
