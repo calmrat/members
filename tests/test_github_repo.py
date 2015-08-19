@@ -7,6 +7,7 @@
 from __future__ import unicode_literals, absolute_import
 
 from instructions import commands, datatypes
+import pytest
 
 TEST_REPO = 'kejbaly2/members'
 
@@ -26,7 +27,7 @@ def repo_no_auth(args=None):
     args["uri"] = TEST_REPO
     return args
 
-
+@pytest.mark.xfail(reason="GithubException")
 def test_default_auth_good():
     from members import github_repo as repo
 
