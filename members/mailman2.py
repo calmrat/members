@@ -23,7 +23,7 @@ def check_h2(content, search_str):
         raise RuntimeError
 
 
-def mm2_download(uri, user, password):
+def _download(uri, user, password):
     '''
     # FIXME DOCS
     '''
@@ -65,13 +65,14 @@ def extract(args, config=None):
                 base_url, list_name))
 
     list_url = "{}/roster/{}".format(base_url, list_name)
-    content = mm2_download(list_url, user, password)
+
+    content = _download(list_url, user, password)
 
     # Check for and report any errors return in the HTML
     check_h2(content, 'Error')
 
     # source contain list members page content
-    users = re.findall(r'(?<=--at--redhat\.com">)(?<=>).*(?=<\/a>)', content)
-    users = ['@'.join(u.split(' at ')) for u in users]
+    users = re.findall(r'(?<=>)(\S* at \S*|\S*@\S*)(?=<\/a>)', content)
+    users = ['@'.join(user.split(' at ')) if ' at ' in user else user for user in users]
 
     return users
