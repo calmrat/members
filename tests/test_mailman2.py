@@ -47,7 +47,6 @@ def test_download_auth():
     assert mm2._download(uri, user, password) == urllib2.urlopen(uri).read()
 
 
-@pytest.mark.xfail(reason="URLError")
 def test_extract():
     import urllib2
     import re
@@ -60,18 +59,18 @@ def test_extract():
 
     config = {}
     config['lists'] = {}
-    config['lists']['qe-dept-list'] = {}
+    config['lists']['mailman'] = {}
 
     with pytest.raises(RuntimeError):
         mm2.extract(args, config)
 
-    args['base_url'] = "http://post-office.corp.redhat.com/mailman"
-    args['list_name'] = "qe-dept-list"
+    args['base_url'] = "http://mailman.ijs.si/mailman"
+    args['list_name'] = "mailman"
 
     list_url = "{}/roster/{}".format(args['base_url'], args['list_name'])
     content = urllib2.urlopen(list_url).read()
 
-    users = re.findall(r'(?<=--at--redhat\.com">)(?<=>).*(?=<\/a>)', content)
-    users = ['@'.join(user.split(' at ')) for user in users]
+    users = re.findall(r'(?<=>)\S*(  at  |@)\S*(?=<\/a>)', content)
+    users = ['@'.join(user.split(' at ')) for user in users if '__at__' in user ]
 
     assert mm2.extract(args, config) == users
