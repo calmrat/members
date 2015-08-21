@@ -25,22 +25,23 @@ __irequires__ = [
     # CORE DEPENDENCIES
     'functioncache',
     'argparse',
-    'pyyaml',
-    'requests',
-    'requests-kerberos',
-    'pandas',
+    'pyyaml==3.11',
+    'requests==2.7.0',
+    'requests-kerberos==0.7.0',  # FIXME: no hard dep; orgchart3 only
+    'pandas==0.16.2',  # FIXME: shouldn't be a hard dep; orgchart3 only
     # FIXME: should be optional...
     # TESTING
-    'pytest',
-    'pytest-pep8',  # run with `py.test --pep8 ...`
+    'pytest==2.7.2',
     'instructions',
+    'pytest-pep8==0.1.0',  # run with `py.test --pep8 ...`
     # FIXME: should be optional...
     # GITHUB
-    'PyGithub',
+    'PyGithub==1.25.2',
     # FIXME: should be optional...
     # DOCS
-    'sphinx',
+    'sphinx==1.3.1',
 ]
+
 pip_src = 'https://pypi.python.org/packages/src'
 __deplinks__ = []
 
