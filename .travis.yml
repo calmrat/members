@@ -8,8 +8,6 @@ python:
     #  - "3.4"  # ## SEE BELOW FOR EXPLANATION
 install:
   - "pip install coveralls virtualenv"
-  - "pip install --no-index --find-links=./wheelhouse pandas"
-  - "pip install --no-index --find-links=./wheelhouse matplotlib"
   - "python setup.py develop"
 script: 
   - "coverage run --source=members -m py.test tests"
