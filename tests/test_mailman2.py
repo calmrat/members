@@ -70,7 +70,7 @@ def test_extract():
     list_url = "{}/roster/{}".format(args['base_url'], args['list_name'])
     content = urllib2.urlopen(list_url).read()
 
-    users = re.findall(r'(?<=>)\S*(  at  |@)\S*(?=<\/a>)', content)
-    users = ['@'.join(user.split(' at ')) for user in users if '__at__' in user ]
+    users = re.findall(r'(?<=>)(\S* at \S*|\S*@\S*)(?=<\/a>)', content)
+    users = ['@'.join(user.split(' at ')) if ' at ' in user else user for user in users]
 
     assert mm2.extract(args, config) == users

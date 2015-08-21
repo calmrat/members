@@ -72,7 +72,7 @@ def extract(args, config=None):
     check_h2(content, 'Error')
 
     # source contain list members page content
-    users = re.findall(r'(?<=--at--redhat\.com">)(?<=>).*(?=<\/a>)', content)
-    users = ['@'.join(u.split(' at ')) for u in users]
+    users = re.findall(r'(?<=>)(\S* at \S*|\S*@\S*)(?=<\/a>)', content)
+    users = ['@'.join(user.split(' at ')) if ' at ' in user else user for user in users]
 
     return users
