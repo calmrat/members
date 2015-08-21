@@ -27,6 +27,7 @@ def repo_no_auth(args=None):
     args["uri"] = TEST_REPO
     return args
 
+# FIXME shouldn't skip test on every error 
 @pytest.mark.xfail(reason="GithubException")
 def test_default_auth_good():
     from members import github_repo as repo

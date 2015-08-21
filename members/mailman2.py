@@ -65,6 +65,7 @@ def extract(args, config=None):
                 base_url, list_name))
 
     list_url = "{}/roster/{}".format(base_url, list_name)
+
     content = mm2_download(list_url, user, password)
 
     # Check for and report any errors return in the HTML

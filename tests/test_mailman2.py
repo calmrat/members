@@ -1,11 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # vim: tabstop=4 expandtab shiftwidth=4 softtabstop=4
-# Author: "Chris Ward" <cward@redhat.com>
+# Author: "Eduard Trott" <etrott@redhat.com>
 
 from __future__ import unicode_literals
 import pytest
 
+def test_global_import():
+    from members import mailman2 as mm2
 
 def test_raise_exception():
     from members import mailman2 as mm2
@@ -51,11 +53,31 @@ def test_download_auth():
 
     assert mm2.download(uri, user, password) == urllib2.urlopen(uri).read()
 
+@pytest.mark.xfail(reason="URLError")
 def test_extract():
+    import urllib2
+    import re
+
     from members import mailman2 as mm2
-    # should i create here args obj and test extractions with it?
-    # or we need to refactor parse_cli() func in the way that 
-    # it will take sys.argv as input
-    # http://stackoverflow.com/questions/18160078/how-do-you-write-tests-for-the-argparse-portion-of-a-python-module
-    
-    # assert mm2.extract(None)
+
+    args = {}
+    args['user'] = "username"
+    args['password'] = "password"
+
+    config = {}
+    config['lists'] = {}
+    config['lists']['qe-dept-list'] = {}
+
+    with pytest.raises(RuntimeError):
+        mm2.extract(args, config)
+
+    args['base_url'] = "http://post-office.corp.redhat.com/mailman"
+    args['list_name'] = "qe-dept-list"
+
+    list_url = "{}/roster/{}".format(args['base_url'], args['list_name'])
+    content = urllib2.urlopen(list_url).read()
+
+    users = re.findall(r'(?<=--at--redhat\.com">)(?<=>).*(?=<\/a>)', content)
+    users = ['@'.join(user.split(' at ')) for user in users]
+
+    assert mm2.extract(args, config) == users
