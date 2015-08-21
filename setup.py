@@ -23,24 +23,24 @@ __desc__ = 'Get membership details from various data sources.'
 __scripts__ = ['bin/members']
 __irequires__ = [
     # CORE DEPENDENCIES
-    'functioncache',
-    'argparse',
-    'pyyaml',
-    'requests',
-    'requests-kerberos',
-    'pandas',
-    # FIXME: should be optional...
-    # TESTING
-    'pytest',
-    'pytest-pep8',  # run with `py.test --pep8 ...`
-    'instructions',
-    # FIXME: should be optional...
-    # GITHUB
-    'PyGithub',
-    # FIXME: should be optional...
-    # DOCS
-    'sphinx',
+    'functioncache==0.92',
+    'argparse==1.3.0',
+    'pyyaml==3.11',
+    'requests==2.7.0',
+    'requests-kerberos==0.7.0',  # FIXME: no hard dep; orgchart3 only
+    'pandas==0.16.2',  # FIXME: shouldn't be a hard dep; orgchart3 only
 ]
+__xrequires__ = {
+    'tests': [
+        'pytest==2.7.2',
+        'instructions',
+        'pytest-pep8==1.0.6',  # run with `py.test --pep8 ...`
+    ],
+    'docs': ['sphinx==1.3.1', ],
+    'github': ['PyGithub==1.25.2', ],
+
+}
+
 pip_src = 'https://pypi.python.org/packages/src'
 __deplinks__ = []
 
@@ -73,6 +73,7 @@ default_setup = dict(
     dependency_links=__deplinks__,
     description=__desc__,
     install_requires=__irequires__,
+    extras_require=__xrequires__,
     name=__pkg__,
     package_dir=__pkgdir__,
     packages=__pkgs__,

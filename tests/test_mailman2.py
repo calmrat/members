@@ -6,17 +6,20 @@
 from __future__ import unicode_literals
 import pytest
 
+
 def test_global_import():
-    from members import mailman2 as mm2
+    from members import mailman2 as mm2  # NOQA: W0611 'imported but unused'
+
 
 def test_raise_exception():
     from members import mailman2 as mm2
 
     content = ("<h2>Error</h2>"
-        "<strong>An example of an Error message.</strong>")
+               "<strong>An example of an Error message.</strong>")
 
     with pytest.raises(RuntimeError):
         mm2.check_h2(content, 'Error')
+
 
 def test_download_no_auth():
     from members import mailman2 as mm2
@@ -27,9 +30,10 @@ def test_download_no_auth():
     password = 'password'
     uri = "http://example.com/"
 
-    assert mm2.download(uri, user, None) == urllib2.urlopen(uri).read()
-    assert mm2.download(uri, None, password) == urllib2.urlopen(uri).read()
-    assert mm2.download(uri, None, None) == urllib2.urlopen(uri).read()
+    assert mm2._download(uri, user, None) == urllib2.urlopen(uri).read()
+    assert mm2._download(uri, None, password) == urllib2.urlopen(uri).read()
+    assert mm2._download(uri, None, None) == urllib2.urlopen(uri).read()
+
 
 def test_download_auth():
     from members import mailman2 as mm2
@@ -40,18 +44,8 @@ def test_download_auth():
     password = 'password'
     uri = "http://example.com/"
 
-    assert mm2.download(uri, user, password) == urllib2.urlopen(uri).read()
+    assert mm2._download(uri, user, password) == urllib2.urlopen(uri).read()
 
-def test_download_auth():
-    import urllib2
-
-    from members import mailman2 as mm2
-    # which username and password shoud i use in testor should i use it at all?
-    user = 'username'
-    password = 'password'
-    uri = "http://example.com/"
-
-    assert mm2.download(uri, user, password) == urllib2.urlopen(uri).read()
 
 @pytest.mark.xfail(reason="URLError")
 def test_extract():

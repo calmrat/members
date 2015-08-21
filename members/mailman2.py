@@ -23,7 +23,7 @@ def check_h2(content, search_str):
         raise RuntimeError
 
 
-def mm2_download(uri, user, password):
+def _download(uri, user, password):
     '''
     # FIXME DOCS
     '''
@@ -66,7 +66,7 @@ def extract(args, config=None):
 
     list_url = "{}/roster/{}".format(base_url, list_name)
 
-    content = mm2_download(list_url, user, password)
+    content = _download(list_url, user, password)
 
     # Check for and report any errors return in the HTML
     check_h2(content, 'Error')

@@ -1,3 +1,6 @@
+# Wheel files
+*.whl
+
 # notebook cache
 .ipynb_checkpoints
 
