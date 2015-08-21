@@ -19,8 +19,9 @@ def check_h2(content, search_str):
     if re.search(r'<h2>{}<\/h2>'.format(search_str), content):
         err = re.findall(r'(?<=<strong>).*(?=<\/strong>)', content)
         if not err:
-            logr.error(err[0])
-        raise RuntimeError
+            logr.debug('FOUND H2: {}'.format(err[0]))
+        else:
+            raise RuntimeError(err[0])
 
 
 def _download(uri, user, password):
@@ -28,7 +29,7 @@ def _download(uri, user, password):
     # FIXME DOCS
     '''
     if user and password:
-        logr.debug('AUTH {}:{}'.format(user, uri))
+        logr.debug('AUTH {} at {}'.format(user, uri))
         cookieJar = cookielib.CookieJar()
 
         opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cookieJar))
@@ -44,25 +45,20 @@ def _download(uri, user, password):
     return urllib2.urlopen(uri, urllib.urlencode(form)).read()
 
 
-def extract(args, config=None):
+def extract(list_name, base_url, list_config=None, user=None, password=None):
     '''
     # FIXME DOCS
     '''
-    base_url = args.get('base_url') or config.get('base_url')
-    list_name = args.get('list_name')
-
-    lists = config.get('lists') or {}
-    list_config = lists.get(list_name) or {}
-    user = args.get('user') or list_config.get('user')
-    password = args.get('password') or list_config.get('password')
-
-    logr.debug(
-        '[{}] {}: {}'.format(base_url, list_name, user))
-
-    if not (base_url or list_name):
+    if not (base_url and list_name):
         raise RuntimeError(
             "base_url [{}] and list_name [{}] can not be NULL".format(
                 base_url, list_name))
+
+    list_config = list_config or {}
+    assert isinstance(list_config, dict)
+
+    logr.debug(
+        '[{}] {}: {}'.format(base_url, list_name, user))
 
     list_url = "{}/roster/{}".format(base_url, list_name)
 
@@ -73,6 +69,7 @@ def extract(args, config=None):
 
     # source contain list members page content
     users = re.findall(r'(?<=>)(\S* at \S*|\S*@\S*)(?=<\/a>)', content)
-    users = ['@'.join(user.split(' at ')) if ' at ' in user else user for user in users]
+    users = ['@'.join(u.split(' at ')) if ' at ' in u else u
+             for u in users]
 
     return users

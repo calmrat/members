@@ -8,6 +8,7 @@ from __future__ import unicode_literals, absolute_import
 
 # INTERNAL PYTHON MODULES
 import argparse
+from getpass import getuser
 import logging
 import pandas as pd
 
@@ -59,25 +60,27 @@ def parse_cli():
     parser.add_argument('-x', '--exclude', metavar='USER', nargs='+',
                         help="exclude results users by pattern")
 
+
     # Mailman 2
     mm2 = subparsers.add_parser('mailman2')
-    mm2.add_argument('list_name', metavar='S',
+    mm2.add_argument('list_name', metavar='LIST_NAME',
                      help='Mailman 2 list name')
-    mm2.add_argument('-B', '--base-url', metavar='URL',
+    mm2.add_argument('-B', '--base-url', metavar='BASE_URL',
                      help='URL to Mailman2 list-serve')
-    mm2.add_argument('-u', '--user', metavar='USER',
-                     help='Username to login with')
-    mm2.add_argument('-p', '--password', metavar='PASS',
-                     help='Password to login with')
+    #mm2.add_argument('-u', '--user', metavar='USER',
+    #                 help='Username to login with')
+    #mm2.add_argument('-p', '--password', metavar='PASS',
+    #                 help='Password to login with')
+    mm2.set_defaults(**dict((config.get('mailman2') or {}).items()))
+
 
     # Orgchart 3
     # SUPPORTS KERBEROS LOGIN ONLY FOR NOW
     oc3 = subparsers.add_parser('orgchart3')
     # FIXME: support by group
-    oc3.add_argument('type', metavar='TYPE', choices=['teamlead'],
-                     help='Orgchart3 grouping type')
-    oc3.add_argument('name', metavar='NAME',
-                     help='Orgchart3 type name (eg, team x)')
+    oc3.add_argument('uid', metavar='NAME',
+                     default=getuser(),
+                     help='uid of team lead / manager')
     # oc3.add_argument('-f', '--filter', metavar='FILTER', choices=['location']
     #                 help='Orgchart3 member filters')
     oc3.add_argument('-B', '--base-url', metavar='URL',
@@ -86,23 +89,28 @@ def parse_cli():
                      help="don't append default email to usernames")
     oc3.add_argument('-DED', '--default-email-domain',
                      help="default email domain (eg: @example.com)")
+    oc3.set_defaults(**dict((config.get('orgchart3') or {}).items()))
+
 
     # Github API - Github repo members
     g = subparsers.add_parser('github_repo')
-    g.add_argument('uri',
+    g.add_argument('repo_url',
                    help='Github "[user|group]/repo" resource uri')
-    g.add_argument('who',
+    g.add_argument('target',
                    nargs='?',
                    choices=['assignees', 'collaborators', 'contributors',
                             'stargazers', 'teams', 'watchers'],
                    help='Github repository name')
     g.add_argument('user_attrs',
-                   nargs='*',
+                   nargs=argparse.REMAINDER,
                    choices=['login', 'email', 'bio', 'company',
                             'created_at', 'hireable', 'location',
                             'updated_at', 'url'],
                    default='login',
                    help='Github User attribute (default: login)')
+    g.add_argument('-t', '--token',
+                   help='Github User Token (instead of password)')
+    g.set_defaults(**dict((config.get('github_repo') or {}).items()))
 
     args = vars(parser.parse_args())  # parse and load args as a dict
 
@@ -134,13 +142,43 @@ if __name__ == "__main__":
     if src == 'mailman2':
         # MAILMAN 2 list member extraction
         from members import mailman2
-        users = mailman2.extract(args, src_config)
+        list_name = args.get('list_name')
+        base_url = args.get('base_url')
+
+        # this is defined in CONFIG only; not argparser
+        _config = config.get('mailman2')
+        lists = _config.get('lists') or {}
+        list_config = lists.get(list_name) or {}
+        user = list_config.get('user')
+        password = list_config.get('password')
+
+        users = mailman2.extract(list_name=list_name, base_url=base_url,
+                                 list_config=list_config, user=user, password=password)
     elif src == 'orgchart3':
         from members import orgchart3
-        users = orgchart3.extract(args, src_config)
+
+        uid = args.get('uid', getuser())
+        base_url = args.get('base_url')
+        default_email_domain = args.get('default_email_domain')
+        no_default_email_domain = args.get('no_default_email_domain')
+
+        users = orgchart3.extract(uid=uid, base_url=base_url,
+                                  no_default_email_domain=no_default_email_domain,
+                                  default_email_domain=default_email_domain)
     elif src == 'github_repo':
         from members import github_repo
-        users = github_repo.extract(args, src_config)
+
+        user = args.get('user', getuser())
+        password = args.get('password')
+        token = args.get('token')
+        user_attrs = args.get('user_attrs', ['login'])
+        # DEFAULT to lookup assignees if target isn't set to avoid an error
+        # assignees doesn't require authentication
+        target = args.get('target', 'assignees')
+        repo_url = args.get('repo_url')
+
+        users = github_repo.extract(repo_url=repo_url, target=target, user=user,
+                                    password=password, token=token, user_attrs=user_attrs)
     else:
         raise RuntimeError("Unknown datasource [{}]".format(src))
 

@@ -13,9 +13,17 @@ import logging
 
 from github import Github
 
-from members.utils import StandardArgs
-
 logr = logging.getLogger(__name__)
+
+# List of Github API calls available
+TARGETS = {
+    'collaborators': lambda x: x.get_collaborators(),
+    'assignees': lambda x: x.get_assignees(),
+    'contributors': lambda x: x.get_contributors(),
+    'stargazers': lambda x: x.get_stargazers(),
+    'teams': lambda x: x.get_teams(),
+    'watchers': lambda x: x.get_watchers(),
+}
 
 
 def _logins(users, user_attrs=None):
@@ -34,6 +42,12 @@ def _logins(users, user_attrs=None):
     # updated_at
     # url
 
+    # 'login' will be the dict index key; remove it from user_attr columns
+    if 'login' in user_attrs:
+        if user_attrs.index('login') >= 0:
+            # get this out of the remaining attrs to parse
+            del user_attrs[user_attrs.index('login')]
+
     _users = {}
     for u in users:
         l = u.login
@@ -46,36 +60,34 @@ def _logins(users, user_attrs=None):
     return _users
 
 
-def extract(args=None, config=None):
+def extract(repo_url=None, target=None, user=None, password=None, token=None,
+            user_attrs=None):
     '''
     FIXME: DOCS...
     '''
-    args, config = args or {}, config or {}
-    sargs = StandardArgs(args, config)
-    user = sargs.user
+    if not repo_url:
+        raise RuntimeError("URI must be specified")
+
+    if target not in TARGETS.keys():
+        raise RuntimeError("Unknown members target [{}]".format(target))
 
     # eg, login, email; user.ATTR to return as ['member', 'member', ... ']
-    user_attrs = args.get('user_attrs') or []
-    if not isinstance(user_attrs, list):
+    user_attrs = user_attrs or []
+    # user_attrs can be a list (of strings) or a string
+    assert isinstance(user_attrs, (unicode, str, list))
+    # if we get a string, put convert it to a single item list
+    if isinstance(user_attrs, (unicode, str)):
         user_attrs = [user_attrs]
-
-    # SPECIAL CASE - Always get logins
-    if 'login' in user_attrs:
-        if user_attrs.index('login') >= 0:
-            # get this out of the remaining attrs to parse
-            del user_attrs[user_attrs.index('login')]
-
-    if not user_attrs:
-        user_attrs = config.get('user_attrs') or []
-
+    # Should only have a list at this point... empty or with strings
+    assert isinstance(user_attrs, list)
     logr.debug("user_attrs: {}".format(user_attrs))
 
     # use token if available, otherwise, password
-    if 'token' in config:
-        logr.debug(" ... FOUND AUTH TOKEN")
-        password = config.get('token')
+    if token:
+        logr.debug(" ... USING AUTH TOKEN")
+        password = token
     else:
-        password = sargs.password
+        assert password != ''  # is not null
 
     if user and password:
         logr.debug("AUTHENTICATING USER (WITH PASSOWRD): {}".format(user))
@@ -87,31 +99,11 @@ def extract(args=None, config=None):
             logr.debug("NO USER / PASSWORD set")
         g = Github()
 
-    uri = args.get('uri')
-    if not uri:
-        raise RuntimeError("URI must be specified")
-    repo = g.get_repo(uri)
+    repo = g.get_repo(repo_url)
 
-    members = ''
+    # run the github api call for members depending on requested target
+    users = TARGETS[target](repo)
 
-    # DEFAULT to contributors if who isn't set to avoid an error
-    # contributors shouldn't require authentication
-    who = args.get('who', 'assignees')
-
-    # List of Github API calls available
-    WHO = {
-        'collaborators': lambda x: x.get_collaborators(),
-        'assignees': lambda x: x.get_assignees(),
-        'contributors': lambda x: x.get_contributors(),
-        'stargazers': lambda x: x.get_stargazers(),
-        'teams': lambda x: x.get_teams(),
-        'watchers': lambda x: x.get_watchers(),
-    }
-
-    if who not in WHO.keys():
-        raise RuntimeError("Unknown members target [{}]".format(who))
-
-    users = WHO[who](repo)
     members = _logins(users=users, user_attrs=user_attrs)
 
     return members

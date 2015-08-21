@@ -12,7 +12,6 @@ Supported AUthentication:
 # PY3 COMPAT
 from __future__ import unicode_literals, absolute_import
 
-from getpass import getuser
 import logging
 import os
 from urllib import urlencode
@@ -73,18 +72,18 @@ def download(uri, user=None, password=None, saveas=None, ssl_verify=False):
     return saveas
 
 
-def extract(args, config=None):
+def extract(uid=None, base_url=None, no_default_email_domain=True,
+            default_email_domain=None):
     '''
     FIXME: DOCS...
     '''
-    uid = args.get('name') or getuser()
-    base_url = args.get('base_url') or config.get('base_url') or {}
+    assert base_url and isinstance(base_url, (unicode, str))
     export_url = os.path.join(base_url, 'export_csv')
 
-    # ded == default email domain
-    no_ded = args.get('no_default_email_domain')
-    ded = (
-        args.get('default_email_domain') or config.get('default_email_domain'))
+    # ded is shortform for "default email domain"
+    # this will convert uid's to  uid@default_email_domain.com
+    no_ded = no_default_email_domain
+    ded = default_email_domain
 
     get_args = GET_ARGS.copy()
     get_args['uid'] = uid
@@ -92,8 +91,6 @@ def extract(args, config=None):
     csv_path = download(uri)
 
     members_df = pd.read_csv(csv_path)
-    # FIXME: old, unused code...
-    # is_brq = lambda x: bool('Brno' in x or 'Czech' in x)
 
     users = list(members_df['Kerberos'].unique())
 

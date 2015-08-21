@@ -53,24 +53,29 @@ def test_extract():
 
     from members import mailman2 as mm2
 
-    args = {}
-    args['user'] = "username"
-    args['password'] = "password"
+    base_url = "http://mailman.ijs.si/mailman"
+    list_name = 'mailman'
 
-    config = {}
-    config['lists'] = {}
-    config['lists']['mailman'] = {}
-
+    # null value for either base_url or list_name raises RuntimeError
+    not_a_url = None
     with pytest.raises(RuntimeError):
-        mm2.extract(args, config)
+        mm2.extract(list_name=list_name, base_url=not_a_url)
 
-    args['base_url'] = "http://mailman.ijs.si/mailman"
-    args['list_name'] = "mailman"
+    # null value for either base_url or list_name raises RuntimeError
+    not_a_name = None
+    with pytest.raises(RuntimeError):
+        mm2.extract(list_name=not_a_name, base_url=base_url)
 
-    list_url = "{}/roster/{}".format(args['base_url'], args['list_name'])
+    # Check that an invalid url raises ValueError
+    not_a_url = 'NOT A URL'
+    with pytest.raises(ValueError):
+        mm2.extract(list_name=list_name, base_url=not_a_url)
+
+    list_url = "{}/roster/{}".format(base_url, list_name)
     content = urllib2.urlopen(list_url).read()
 
     users = re.findall(r'(?<=>)(\S* at \S*|\S*@\S*)(?=<\/a>)', content)
-    users = ['@'.join(user.split(' at ')) if ' at ' in user else user for user in users]
+    users = ['@'.join(u.split(' at ')) if ' at ' in u else u
+             for u in users]
 
-    assert mm2.extract(args, config) == users
+    assert mm2.extract(list_name=list_name, base_url=base_url) == users

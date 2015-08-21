@@ -17,26 +17,16 @@ def test_global_import():
     from members import github_repo  # NOQA: W0611; only import
 
 
-def repo_no_auth(args=None):
-    '''
-    'anonymous' user; no user/pass set
-    '''
-    args = args or {}
-    args["user"] = None
-    args["password"] = None
-    args["uri"] = TEST_REPO
-    return args
-
-# FIXME shouldn't skip test on every error 
+# FIXME shouldn't skip test on every error
 @pytest.mark.xfail(reason="GithubException")
 def test_default_auth_good():
     from members import github_repo as repo
 
     # DEFAULT AUTH should be 'anonymous'; no user/pass required
-    args = repo_no_auth()
+
     # assignees should not require authenticated user to call
-    args['who'] = 'assignees'
-    users = repo.extract(args=args, config=None)
+    target = 'assignees'
+    users = repo.extract(repo_url=TEST_REPO, target=target)
 
     # see: https://github.com/maxtepkeev/instructions
     # see: http://bit.ly/maxtepkeev_instructions_eupy15
@@ -45,20 +35,15 @@ def test_default_auth_good():
         raise RuntimeError(
             "Expeted more than one assignee, got {}".format(result))
 
-    # contributors should not require authenticated user to call
-    args['who'] = 'contributors'
-    users = repo.extract(args=args, config=None)
-
 
 def test_default_auth_bad():
     from members import github_repo as repo
 
     # DEFAULT AUTH should be 'anonymous'; no user/pass required
-    args = repo_no_auth()
     # collaborators SHOULD require auth
-    args['who'] = 'collaborators'
+    target = 'collaborators'
     try:
-        repo.extract(args=args)
+        repo.extract(repo_url=TEST_REPO, target=target)
     # FIXME: check for specific github exception too.
     except Exception as e:
         print('EXPECTED GITHUB EXCEPTION, got {}. IGNORING!'.format(e))

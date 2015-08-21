@@ -6,7 +6,6 @@
 # PY3 COMPAT
 from __future__ import unicode_literals, absolute_import
 
-from getpass import getuser
 import logging
 import os
 import subprocess
@@ -40,19 +39,16 @@ class StandardArgs(object):
         '''
         FIXME: DOCS...
         '''
-        self._args, self._config = args or {}, config or {}
-        logr.debug('CREATING STANDARD ARGS')
-        logr.debug(' ... args: {}'.format(args))
-        logr.debug(' ... config: {}'.format(config))
-        self.user = self.get('user', getuser())
-        self.password = self.get('password')
-        self.base_url = self.get('base_url')
-        self.kind = self.get('kind')
+        args = args or {}
+        config = config or {}
+        assert isinstance(args, dict)
+        assert isinstance(config, dict)
+        self._args, self._config = args, config
 
-    def get(self, key, default=None):
+    def get(self, key, default=None, **kwargs):
         user_value = self._args.get(key) or self._config.get(key)
         if hasattr(default, '__call__'):
-            value = user_value or default()
+            value = user_value or default(**kwargs)
         else:
             value = user_value or default
         return value
