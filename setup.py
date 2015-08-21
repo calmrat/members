@@ -31,8 +31,8 @@ __irequires__ = [
     'argparse==1.3.0',
     'pyyaml==3.11',
     'requests==2.7.0',
-    'requests-kerberos==0.7.0',  # FIXME: no hard dep; orgchart3 only
-    'pandas==0.16.2',  # FIXME: shouldn't be a hard dep; orgchart3 only
+    'requests-kerberos==0.7.0',
+    'pandas==0.16.2',
 ]
 __xrequires__ = {
     'tests': [
@@ -43,7 +43,7 @@ __xrequires__ = {
     'docs': ['sphinx==1.3.1', ],
     'github': ['PyGithub==1.25.2', ],
     'invoke': ['invoke==0.10.1', ],
-
+    'api': ['pyrestful==0.4.0', ],
 }
 
 pip_src = 'https://pypi.python.org/packages/src'
