@@ -60,19 +60,17 @@ def parse_cli():
     parser.add_argument('-x', '--exclude', metavar='USER', nargs='+',
                         help="exclude results users by pattern")
 
-
     # Mailman 2
     mm2 = subparsers.add_parser('mailman2')
     mm2.add_argument('list_name', metavar='LIST_NAME',
                      help='Mailman 2 list name')
     mm2.add_argument('-B', '--base-url', metavar='BASE_URL',
                      help='URL to Mailman2 list-serve')
-    #mm2.add_argument('-u', '--user', metavar='USER',
+    # mm2.add_argument('-u', '--user', metavar='USER',
     #                 help='Username to login with')
-    #mm2.add_argument('-p', '--password', metavar='PASS',
+    # mm2.add_argument('-p', '--password', metavar='PASS',
     #                 help='Password to login with')
     mm2.set_defaults(**dict((config.get('mailman2') or {}).items()))
-
 
     # Orgchart 3
     # SUPPORTS KERBEROS LOGIN ONLY FOR NOW
@@ -90,7 +88,6 @@ def parse_cli():
     oc3.add_argument('-DED', '--default-email-domain',
                      help="default email domain (eg: @example.com)")
     oc3.set_defaults(**dict((config.get('orgchart3') or {}).items()))
-
 
     # Github API - Github repo members
     g = subparsers.add_parser('github_repo')
@@ -111,6 +108,18 @@ def parse_cli():
     g.add_argument('-t', '--token',
                    help='Github User Token (instead of password)')
     g.set_defaults(**dict((config.get('github_repo') or {}).items()))
+
+    # Facebook API -
+    # Facebook Group Members
+    fb = subparsers.add_parser('facebook_group')
+    fb.add_argument('group_id',
+                    help='Facebook group id resource uri')
+    fb.add_argument('-t', '--access_token',
+                    help='Facebook Access Token (instead of password)')
+    fb.add_argument('-f', '--fields',
+                    nargs='*',
+                    help='Facebook  Token (instead of password)')
+    fb.set_defaults(**dict((config.get('facebook_group') or {}).items()))
 
     args = vars(parser.parse_args())  # parse and load args as a dict
 
@@ -153,7 +162,8 @@ if __name__ == "__main__":
         password = list_config.get('password')
 
         users = mailman2.extract(list_name=list_name, base_url=base_url,
-                                 list_config=list_config, user=user, password=password)
+                                 list_config=list_config, user=user,
+                                 password=password)
     elif src == 'orgchart3':
         from members import orgchart3
 
@@ -162,9 +172,10 @@ if __name__ == "__main__":
         default_email_domain = args.get('default_email_domain')
         no_default_email_domain = args.get('no_default_email_domain')
 
-        users = orgchart3.extract(uid=uid, base_url=base_url,
-                                  no_default_email_domain=no_default_email_domain,
-                                  default_email_domain=default_email_domain)
+        users = orgchart3.extract(
+            uid=uid, base_url=base_url,
+            no_default_email_domain=no_default_email_domain,
+            default_email_domain=default_email_domain)
     elif src == 'github_repo':
         from members import github_repo
 
@@ -177,8 +188,20 @@ if __name__ == "__main__":
         target = args.get('target', 'assignees')
         repo_url = args.get('repo_url')
 
-        users = github_repo.extract(repo_url=repo_url, target=target, user=user,
-                                    password=password, token=token, user_attrs=user_attrs)
+        users = github_repo.extract(
+            repo_url=repo_url, target=target, user=user, password=password,
+            token=token, user_attrs=user_attrs)
+    elif src == 'facebook_group':
+        from members import facebook_group
+
+        group_id = args.get('group_id')
+        access_token = args.get('access_token')
+        fields = args.get('fields') or []
+
+        print group_id, access_token, fields, '*'*100
+        users = facebook_group.extract(
+            group_id=group_id, access_token=access_token, fields=fields)
+        print users
     else:
         raise RuntimeError("Unknown datasource [{}]".format(src))
 
