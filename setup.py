@@ -3,7 +3,11 @@
 # Author: "Chris Ward" <cward@redhat.com>
 
 # PY3 COMPAT
-from __future__ import unicode_literals, absolute_import
+# BUG unicode_literals breaks disutils
+# python-2.7 setup.py build
+# "'package' must be a string (dot-separated), list, or tuple")
+# python3 works
+from __future__ import absolute_import  # , unicode_literals
 
 from setuptools import setup
 
@@ -38,6 +42,7 @@ __xrequires__ = {
     ],
     'docs': ['sphinx==1.3.1', ],
     'github': ['PyGithub==1.25.2', ],
+    'invoke': ['invoke==0.10.1', ],
 
 }
 

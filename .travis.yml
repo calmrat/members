@@ -11,7 +11,7 @@ install:
   - "pip install coveralls"
   - "git clone https://github.com/kejbaly2/travis_wheels.git /home/travis/travis_wheels"
   - "ls ~/travis_wheels/wheelhouse"
-  - "pip install -e .[tests,docs,github] --find-links=file:///home/travis/travis_wheels/wheelhouse --trusted-host None"
+  - "pip install -e .[tests,docs,github,invoke] --find-links=file:///home/travis/travis_wheels/wheelhouse --trusted-host None"
 
 script: 
   - "coverage run --source=members -m py.test tests"

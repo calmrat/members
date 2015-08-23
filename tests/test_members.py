@@ -13,10 +13,10 @@ def test_version_check():
     # THIS NEEDS TO BE UPDATED EVERY TIME THE MAIN PACKAGE
     # VERSION IS UPDATED!!!
     ######################################################
-    # expected
+    # eg, expected
     # version_info = ('0', '0', '2')
     # __version__ = '.'.join(version_info[0:3])
-    _v = '0.0.2'
+    _v = '0.0.4'
 
     if _version.__version__ != _v:
         raise SystemError('SYNC VERSION in tests/test_members.py')
