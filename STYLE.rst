@@ -31,10 +31,52 @@ Commit Message
 --------------
 See: `How to write a GIT Commit <http://chris.beams.io/posts/git-commit/>`_
 
-Commit message *summary* length should be no more than 50c! Anything longer means 
-you are trying to make to many changes in a single commit.
+Commit message *subject* line length should be no more than 50c! Anything 
+longer means you are trying to make to many changes in a single commit.
 
-Details go into the commit *body*.
+A properly formed git commit subject line should always be able to 
+complete the following sentence::
+
+    If applied, this commit will [your subject line here]
+
+Details go into the commit *body*. Here are some more hints::
+
+    **Separate subject from body with a blank line**
+    Capitalize the subject line
+    Do not end the subject line with a period
+    Use the imperative mood in the subject line
+    Wrap the body at 72 characters
+    Use the body to explain what and why vs. how
+
+For example::
+
+    Summarize changes in around 50 characters or less
+
+    More detailed explanatory text, if necessary. Wrap it to about 72
+    characters or so. In some contexts, the first line is treated as the
+    subject of the commit and the rest of the text as the body. The
+    blank line separating the summary from the body is critical (unless
+    you omit the body entirely); various tools like `log`, `shortlog`
+    and `rebase` can get confused if you run the two together.
+
+    Explain the problem that this commit is solving. Focus on why you
+    are making this change as opposed to how (the code explains that).
+    Are there side effects or other unintuitive consequenses of this
+    change? Here's the place to explain them.
+
+    Further paragraphs come after blank lines.
+
+     - Bullet points are okay, too
+
+     - Typically a hyphen or asterisk is used for the bullet, preceded
+       by a single space, with blank lines in between, but conventions
+       vary here
+
+     If you use an issue tracker, put references to them at the bottom,
+     like this:
+
+     Resolves: #123
+     See also: #456, #789
 
 Versioning
 ----------
