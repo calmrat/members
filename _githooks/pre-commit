@@ -69,7 +69,11 @@ def flake8():
 
 
 def get_files():
-    '''Find all the tracked files. Equivalent to git ls-files.'''
+    '''
+    FIXME: DOCS...
+    Links:
+        * https://github.com/jaidevd/pyticks
+    '''
 
     dirpath = os.path.split(os.getcwd())[0]
     files = []
@@ -88,11 +92,9 @@ def get_files():
 
 
 def _find_fixme(files):
-    '''Find all comments marked FIXME in the file at `filepath`.
-    :param filepath: path to file which is to be parsed for FIXMEs
-    :type filepath: Str
+    '''Find all comments marked FIXME in the files.
+    :param files: list of pathes to files which are to be parsed for FIXMEs
     :return: List of FIXME comments
-    :rtype: list
     '''
     fixmes = []
     for filepath in files:
@@ -144,7 +146,7 @@ def main():
     files = get_files()
     fixmes = _find_fixme(files)
     for fixme in fixmes:
-        print "File {},  line {}, FIXME : {}".format(fixme['file'], fixme['line'], fixme['body'])
+        logr.info(" File {},  line {}, FIXME : {}".format(fixme['file'], fixme['line'], fixme['body']))
 
     if args.stash_first:
         run('git stash -q --keep-index')
