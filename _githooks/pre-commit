@@ -11,6 +11,7 @@ Git pre-commit hooks for stats-report.
 
 import argparse
 import logging
+import os
 import sys
 
 from members.utils import logr, run
@@ -67,6 +68,63 @@ def flake8():
     return ecode
 
 
+def get_files():
+    '''Find all the tracked files. Equivalent to git ls-files.'''
+
+    dirpath = os.path.split(os.getcwd())[0]
+    files = []
+
+    ignored_dirs = ['.git']
+
+    for dirname, dirnames, filenames in os.walk(dirpath):
+        if all(map(lambda d: not d in dirname, ignored_dirs)):
+            files.extend(map(lambda s: os.path.join(dirname, s), filenames))
+
+    ignored_extensions = ['pyc']
+
+    files = [f for f in files if all(map(lambda ex: not f.endswith(ex), 
+                                                        ignored_extensions))]
+    return files
+
+
+def _find_fixme(files):
+    '''Find all comments marked FIXME in the file at `filepath`.
+    :param filepath: path to file which is to be parsed for FIXMEs
+    :type filepath: Str
+    :return: List of FIXME comments
+    :rtype: list
+    '''
+    fixmes = []
+    for filepath in files:
+        with open(filepath, 'r') as f:
+            lines = [line.rstrip() for line in f.readlines()]
+        anchors = []
+        for i in xrange(len(lines)):
+            line = lines[i]
+            if line.lstrip().startswith('# FIXME: '):
+                anchors.append(i)
+        for anchor in anchors:
+            title = lines[anchor].replace('# FIXME: ', '').lstrip()
+            ix = anchor
+            body = []
+            while True:
+                ix += 1
+                try:
+                    if not lines[ix].lstrip().startswith('#'):
+                        break
+                    else:
+                        body.append(lines[ix].lstrip())
+                except IndexError:  # end of file
+                    break
+            if len(body) > 0:
+                body = ''.join([ln.replace('#', '').lstrip() for ln in body])
+            else:
+                body = title
+            # FIXME change with root directory
+            filepath = filepath[filepath.find('members'):]
+            fixmes.append(dict(file=filepath, line=anchor, title=title, body=body))
+    return fixmes
+
 def main():
     """ Main function handling configuration files etc """
     parser = argparse.ArgumentParser(
@@ -83,6 +141,11 @@ def main():
     args = parser.parse_args()
 
     # make sure we're working with only the staged content!
+    files = get_files()
+    fixmes = _find_fixme(files)
+    for fixme in fixmes:
+        print "File {},  line {}, FIXME : {}".format(fixme['file'], fixme['line'], fixme['body'])
+
     if args.stash_first:
         run('git stash -q --keep-index')
 
@@ -94,7 +157,7 @@ def main():
         # make sure we return things back to how they started
         if args.stash_first:
             run('git stash pop -q')
-
+    
     print results
     ecode = 0 if all(results) else 1
 

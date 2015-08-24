@@ -31,6 +31,7 @@ def _logins(users, user_attrs=None):
     FIXME: DOCS...
     '''
     # FIXME: check for support attrs
+    
     # Supported attrs:
     # login  # DEFAULT, no auth required
     # email
