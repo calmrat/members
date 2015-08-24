@@ -78,7 +78,7 @@ def get_files():
     dirpath = os.path.split(os.getcwd())[0]
     files = []
 
-    ignored_dirs = ['.git']
+    ignored_dirs = ['.git', '_githooks']
 
     for dirname, dirnames, filenames in os.walk(dirpath):
         if all(map(lambda d: not d in dirname, ignored_dirs)):
@@ -103,10 +103,10 @@ def _find_fixme(files):
         anchors = []
         for i in xrange(len(lines)):
             line = lines[i]
-            if line.lstrip().startswith('# FIXME: '):
+            if 'FIXME:' in line.lstrip():
                 anchors.append(i)
         for anchor in anchors:
-            title = lines[anchor].replace('# FIXME: ', '').lstrip()
+            title = lines[anchor].split('FIXME:', 1)[1].lstrip()
             ix = anchor
             body = []
             while True:
@@ -122,9 +122,9 @@ def _find_fixme(files):
                 body = ''.join([ln.replace('#', '').lstrip() for ln in body])
             else:
                 body = title
-            # FIXME change with root directory
-            filepath = filepath[filepath.find('members'):]
-            fixmes.append(dict(file=filepath, line=anchor, title=title, body=body))
+            # FIXME change with repo root directory
+            fpath = filepath.split('members/', 1)[1]
+            fixmes.append(dict(file=fpath, line=anchor, title=title, body=body))
     return fixmes
 
 def main():
