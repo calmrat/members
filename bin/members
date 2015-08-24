@@ -143,9 +143,6 @@ if __name__ == "__main__":
 
     src = args['src']  # what data source are we targetting?
 
-    # load the data source specific config options
-    src_config = config[src]
-
     # FIXME:  for p in plugins: p.extract()
     # add 'activated plugins' to config;
     if src == 'mailman2':
@@ -154,9 +151,7 @@ if __name__ == "__main__":
         list_name = args.get('list_name')
         base_url = args.get('base_url')
 
-        # this is defined in CONFIG only; not argparser
-        _config = config.get('mailman2')
-        lists = _config.get('lists') or {}
+        lists = args.get('lists') or {}
         list_config = lists.get(list_name) or {}
         user = list_config.get('user')
         password = list_config.get('password')
