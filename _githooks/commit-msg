@@ -31,7 +31,13 @@ COMMIT_MSG_SIZE_ERR = """
 This is my commit message summary; Max length >>>|
 
 After a line break (\\n) , the full description of
-the commit can be included though. No Problem."""
+the commit can be included though. No Problem.
+
+See: http://chris.beams.io/posts/git-commit/
+"A diff will tell you what changed, but only
+the commit message can properly tell you why."
+
+"""
 
 
 def main():
