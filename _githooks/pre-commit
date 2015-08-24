@@ -23,18 +23,48 @@ def run_tests():
     '''
     Run all the available tests.
     '''
+    logr.warn(" RUNNING TESTS <<")
     # Try to run make build
     cmd = "py.test tests"
-    return run(cmd)
+    output, errors = run(cmd)
+    return 0
 
 
 def make_sdist():
     '''
     Make sure we haven't broken the rpm source builds
     '''
+    logr.warn(" RUNNING SDIST <<")
     # Try to build a python pip installable package
     cmd = 'python setup.py sdist'
-    return run(cmd)
+    output, errors = run(cmd)
+    return 0
+
+
+def flake8():
+    '''
+    `get_git_param` will retrieve configuration from your local git config and
+    then fall back to using the environment variables that the hook has always
+    supported.
+
+    For example, to set the complexity, you'll need to do:
+        git config flake8.complexity 10
+    '''
+    logr.warn(" RUNNING FLAKE8 <<")
+    ecode = 0
+    try:
+        from flake8.hooks import git_hook, get_git_param
+    except ImportError:
+        logr.warn(' .. Skipping flake8. `pip install flake8` required.')
+        ecode = 1
+    else:
+        COMPLEXITY = get_git_param('FLAKE8_COMPLEXITY', 10)
+        STRICT = get_git_param('FLAKE8_STRICT', False)
+        IGNORE = get_git_param('FLAKE8_IGNORE', None)
+        LAZY = get_git_param('FLAKE8_LAZY', False)
+        ecode = git_hook(complexity=COMPLEXITY, strict=STRICT,
+                        ignore=IGNORE, lazy=LAZY)
+    return ecode
 
 
 def main():
@@ -59,22 +89,17 @@ def main():
     try:
         results = []
         if args.run_tests:
-            logr.debug('TESTS RUN: START')
             results.append({'run_tests': run_tests()})
-            logr.warn('TESTS RUN: PASS')
     finally:
         # make sure we return things back to how they started
         if args.stash_first:
             run('git stash pop -q')
 
-    if all(results):
-        sys.exit(0)
-    else:
-        sys.exit(1)
+    print results
+    ecode = 0 if all(results) else 1
 
+    logr.debug(' EXIT: {} <<'.format(ecode))
+    sys.exit(ecode)
 
 if __name__ == '__main__':
     main()
-    sys.exit(0)
-
-sys.exit(1)
