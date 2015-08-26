@@ -69,12 +69,16 @@ def flake8():
 
 
 def get_files():
-    '''Find all the tracked files. Equivalent to git ls-files.'''
+    '''
+    FIXME: DOCS...
+    Links:
+        * https://github.com/jaidevd/pyticks
+    '''
 
-    dirpath = os.path.split(os.getcwd())[0]
+    dirpath = os.getcwd()
     files = []
 
-    ignored_dirs = ['.git']
+    ignored_dirs = ['.git', '_githooks', 'dist']
 
     for dirname, dirnames, filenames in os.walk(dirpath):
         if all(map(lambda d: not d in dirname, ignored_dirs)):
@@ -88,11 +92,9 @@ def get_files():
 
 
 def _find_fixme(files):
-    '''Find all comments marked FIXME in the file at `filepath`.
-    :param filepath: path to file which is to be parsed for FIXMEs
-    :type filepath: Str
+    '''Find all comments marked FIXME in the files.
+    :param files: list of pathes to files which are to be parsed for FIXMEs
     :return: List of FIXME comments
-    :rtype: list
     '''
     fixmes = []
     for filepath in files:
@@ -101,10 +103,10 @@ def _find_fixme(files):
         anchors = []
         for i in xrange(len(lines)):
             line = lines[i]
-            if line.lstrip().startswith('# FIXME: '):
+            if 'FIXME:' in line.lstrip():
                 anchors.append(i)
         for anchor in anchors:
-            title = lines[anchor].replace('# FIXME: ', '').lstrip()
+            title = lines[anchor].split('FIXME:', 1)[1].lstrip()
             ix = anchor
             body = []
             while True:
@@ -120,9 +122,9 @@ def _find_fixme(files):
                 body = ''.join([ln.replace('#', '').lstrip() for ln in body])
             else:
                 body = title
-            # FIXME change with root directory
-            filepath = filepath[filepath.find('members'):]
-            fixmes.append(dict(file=filepath, line=anchor, title=title, body=body))
+            # FIXME change with repo root directory
+            fpath = filepath.split('members/', 1)[1]
+            fixmes.append(dict(file=fpath, line=anchor, title=title, body=body))
     return fixmes
 
 def main():
@@ -144,7 +146,7 @@ def main():
     files = get_files()
     fixmes = _find_fixme(files)
     for fixme in fixmes:
-        print "File {},  line {}, FIXME : {}".format(fixme['file'], fixme['line'], fixme['body'])
+        logr.info(" File {},  line {}, FIXME : {}".format(fixme['file'], fixme['line'], fixme['body']))
 
     if args.stash_first:
         run('git stash -q --keep-index')
