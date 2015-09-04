@@ -11,6 +11,8 @@ Git pre-commit hooks for stats-report.
 
 import argparse
 import logging
+import os
+import re
 import sys
 
 from members.utils import logr, run
@@ -23,7 +25,7 @@ def run_tests():
     '''
     Run all the available tests.
     '''
-    logr.warn(" RUNNING TESTS <<")
+    logr.warn(" RUNNING TESTS  <<")
     # Try to run make build
     cmd = "py.test tests"
     output, errors = run(cmd)
@@ -34,7 +36,7 @@ def make_sdist():
     '''
     Make sure we haven't broken the rpm source builds
     '''
-    logr.warn(" RUNNING SDIST <<")
+    logr.warn(" RUNNING SDIST  <<")
     # Try to build a python pip installable package
     cmd = 'python setup.py sdist'
     output, errors = run(cmd)
@@ -50,7 +52,7 @@ def flake8():
     For example, to set the complexity, you'll need to do:
         git config flake8.complexity 10
     '''
-    logr.warn(" RUNNING FLAKE8 <<")
+    logr.warn(" RUNNING FLAKE8  <<")
     ecode = 0
     try:
         from flake8.hooks import git_hook, get_git_param
@@ -66,6 +68,69 @@ def flake8():
                         ignore=IGNORE, lazy=LAZY)
     return ecode
 
+
+def _get_files():
+    '''
+    FIXME: DOCS...
+    Links:
+        * https://github.com/jaidevd/pyticks
+    '''
+
+    dirpath = os.getcwd()
+    files = []
+
+    ignored_dirs = [r'\/\.', r'\/\_githooks', r'\/dist']
+    ignored_patterns = [re.compile('.*'+pattern+'.*') for pattern in ignored_dirs]
+
+    for dirname, dirnames, filenames in os.walk(dirpath):
+        if all(map(lambda pattern: not pattern.match(dirname), ignored_patterns)):
+            files.extend(map(lambda s: os.path.join(dirname, s), filenames))
+
+    ignored_rear_extensions = ['pyc']
+    files = [f for f in files if all(map(lambda ex: not f.endswith(ex),
+                                                        ignored_rear_extensions))]
+
+    ignored_front_extensions = ['.']
+    files = [f for f in files if all(map(lambda ex: not f.startswith(ex),
+                                                        ignored_front_extensions))]
+
+    return files
+
+
+def _find_fixme(files):
+    '''Find all comments marked anchors in the files.
+    :param files: list of pathes to files which are to be parsed for FIXMEs
+    :return: List of FIXME comments
+    '''
+    anchors = ['FIXME:', 'TODO:']
+    fixmes = []
+    for filepath in files:
+        with open(filepath, 'r') as f:
+            lines = [line.decode('utf8', 'ignore').rstrip()
+                     for line in f.readlines()]
+        anchors_info = []
+        for idx in xrange(len(lines)):
+            line = lines[idx]
+            for anchor in anchors:
+                if anchor in line.lstrip():
+                    anchors_info.append((anchor, idx))
+        for anchor, anchor_pos  in anchors_info:
+            body = [lines[anchor_pos].split(anchor, 1)[1].lstrip()]
+            ix = anchor_pos
+            while True:
+                ix += 1
+                try:
+                    if not lines[ix].lstrip().startswith('#'):
+                        break
+                    else:
+                        body.append(lines[ix].lstrip())
+                except IndexError:  # end of file
+                    break
+            body = ''.join([ln.replace('#', '').lstrip() for ln in body])
+            # FIXME change with repo root directory
+            fpath = filepath.split('members/', 1)[1]
+            fixmes.append(dict(file=fpath, line=anchor_pos, body=body))
+    return fixmes
 
 def main():
     """ Main function handling configuration files etc """
@@ -95,10 +160,17 @@ def main():
         if args.stash_first:
             run('git stash pop -q')
 
-    print results
+    logr.info(' RUNNING FIXMES  <<')
+    files = _get_files()
+    fixmes = _find_fixme(files)
+    for fixme in fixmes:
+        logr.info(" File {},  line {}, FIXME : {}".format(fixme['file'],
+                                                            fixme['line'],
+                                                            fixme['body']))
+
     ecode = 0 if all(results) else 1
 
-    logr.debug(' EXIT: {} <<'.format(ecode))
+    logr.debug(' EXIT: {}  <<'.format(ecode))
     sys.exit(ecode)
 
 if __name__ == '__main__':
