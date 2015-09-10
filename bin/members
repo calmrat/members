@@ -86,7 +86,11 @@ def parse_cli():
     oc3.add_argument('-NDED', '--no-default-email-domain', action='store_true',
                      help="don't append default email to usernames")
     oc3.add_argument('-DED', '--default-email-domain',
-                     help="default email domain (eg: @example.com)")
+                     help="default email domain (eg: example.com)")
+
+    oc3.add_argument('-l', '--location', nargs='?',
+                         help='Filter location')
+
     oc3.set_defaults(**dict((config.get('orgchart3') or {}).items()))
 
     # Github API - Github repo members
@@ -166,11 +170,13 @@ if __name__ == "__main__":
         base_url = args.get('base_url')
         default_email_domain = args.get('default_email_domain')
         no_default_email_domain = args.get('no_default_email_domain')
+        location = args.get('location')
 
         users = orgchart3.extract(
             uid=uid, base_url=base_url,
             no_default_email_domain=no_default_email_domain,
-            default_email_domain=default_email_domain)
+            default_email_domain=default_email_domain,
+            location=location)
     elif src == 'github_repo':
         from members import github_repo
 
@@ -193,7 +199,7 @@ if __name__ == "__main__":
         access_token = args.get('access_token')
         fields = args.get('fields') or []
 
-        print group_id, access_token, fields, '*'*100
+        print group_id, access_token, fields, '*' * 100
         users = facebook_group.extract(
             group_id=group_id, access_token=access_token, fields=fields)
         print users

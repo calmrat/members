@@ -14,6 +14,7 @@ from __future__ import unicode_literals, absolute_import
 
 import logging
 import os
+import re
 from urllib import urlencode
 import warnings
 warnings.simplefilter('ignore')
@@ -47,7 +48,7 @@ GET_ARGS = {
 
 
 # note this leaves garbage in ~/.functioncache that might need to be cleaned
-@functioncache(1 * 60 * 60)  # cache for 1 hour
+# @functioncache(1 * 60 * 60)  # cache for 1 hour
 def download(uri, user=None, password=None, saveas=None, ssl_verify=False):
     '''
     FIXME: DOCS...
@@ -73,7 +74,7 @@ def download(uri, user=None, password=None, saveas=None, ssl_verify=False):
 
 
 def extract(uid=None, base_url=None, no_default_email_domain=True,
-            default_email_domain=None):
+            default_email_domain=None, location=None):
     '''
     FIXME: DOCS...
     '''
@@ -92,8 +93,12 @@ def extract(uid=None, base_url=None, no_default_email_domain=True,
 
     members_df = pd.read_csv(csv_path)
 
-    users = list(members_df['Kerberos'].unique())
-
+    if location is not None:
+        location = re.compile(location)
+        users = list(set([user for user, loc in zip(members_df['Kerberos'], members_df[
+                     'Location']) if location.search(loc) is not None]))
+    else:
+        users = list(members_df['Kerberos'].unique())
     # the team lead should be included as a member of their own team
     users.append(uid)
 
