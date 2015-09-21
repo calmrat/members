@@ -47,13 +47,13 @@ GET_ARGS = {
 
 
 # note this leaves garbage in ~/.functioncache that might need to be cleaned
-@functioncache(1*60*60)  # cache for 1 hour
+@functioncache(1 * 60 * 60)  # cache for 1 hour
 def download(uri, uid=None, user=None, password=None, saveas=None, ssl_verify=False):
     '''
     FIXME: DOCS...
     '''
     # FIXME: use a tempfile
-    saveas = saveas or '/tmp/requests_%s_tmp.csv'%(uid)
+    saveas = saveas or '/tmp/requests_%s_tmp.csv' % (uid)
 
     if not (user or password):
         # Fall back to kerberos auth
