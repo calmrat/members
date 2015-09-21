@@ -15,6 +15,7 @@ from __future__ import unicode_literals, absolute_import
 import logging
 import os
 from urllib import urlencode
+import tempfile
 import warnings
 warnings.simplefilter('ignore')
 
@@ -48,12 +49,16 @@ GET_ARGS = {
 
 # note this leaves garbage in ~/.functioncache that might need to be cleaned
 @functioncache(1 * 60 * 60)  # cache for 1 hour
-def download(uri, uid=None, user=None, password=None, saveas=None, ssl_verify=False):
+def download(uri, user=None, password=None, saveas=None, ssl_verify=False):
     '''
     FIXME: DOCS...
     '''
     # FIXME: use a tempfile
-    saveas = saveas or '/tmp/requests_%s_tmp.csv' % (uid)
+    if saveas is None:
+        temp = tempfile.NamedTemporaryFile(prefix='requests_',
+                                           dir='/tmp')
+        saveas = temp.name
+        temp.close()
 
     if not (user or password):
         # Fall back to kerberos auth
@@ -88,7 +93,7 @@ def extract(uid=None, base_url=None, no_default_email_domain=True,
     get_args = GET_ARGS.copy()
     get_args['uid'] = uid
     uri = '{}?{}'.format(export_url, urlencode(get_args))
-    csv_path = download(uri, uid)
+    csv_path = download(uri)
 
     members_df = pd.read_csv(csv_path)
 
