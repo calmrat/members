@@ -27,7 +27,7 @@ Example install, using VirtualEnv::
 CONFIGURATION
 =============
 
-Example configuration::
+Example configuration, eg at `~/.members`::
 
     mailman2: 
         base_url: http://some.domain.com/mailman2
