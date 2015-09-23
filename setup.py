@@ -54,12 +54,12 @@ readme_pth = 'README.rst'
 with open(readme_pth) as _file:
     readme = _file.read()
 
-github = 'https://github.com/etrott/members'
+github = 'https://github.com/kejbaly2/members'
 download_url = '%s/archive/master.zip' % github
 
 default_setup = dict(
     url=github,
-    license='GPLv2',
+    license='GPLv3',
     author='Eduard Trott',
     author_email='etrott@redhat.com',
     maintainer='Chris Ward',
