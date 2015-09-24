@@ -82,7 +82,7 @@ def parse_cli():
     # oc3.add_argument('-f', '--filter', metavar='FILTER', choices=['location']
     #                 help='Orgchart3 member filters')
     oc3.add_argument('-B', '--base-url', metavar='URL',
-                     help='URL to Mailman2 list-serve')
+                     help='URL to OrgChart3 server')
     oc3.add_argument('-NDED', '--no-default-email-domain', action='store_true',
                      help="don't append default email to usernames")
     oc3.add_argument('-DED', '--default-email-domain',
