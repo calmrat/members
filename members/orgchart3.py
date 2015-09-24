@@ -15,6 +15,7 @@ from __future__ import unicode_literals, absolute_import
 import logging
 import os
 from urllib import urlencode
+import tempfile
 import warnings
 warnings.simplefilter('ignore')
 
@@ -52,8 +53,11 @@ def download(uri, user=None, password=None, saveas=None, ssl_verify=False):
     '''
     FIXME: DOCS...
     '''
-    # FIXME: use a tempfile
-    saveas = saveas or '/tmp/requests_tmp.csv'
+    if saveas is None:
+        temp = tempfile.NamedTemporaryFile(prefix='requests_',
+                                           dir='/tmp')
+        saveas = temp.name
+        temp.close()
 
     if not (user or password):
         # Fall back to kerberos auth
