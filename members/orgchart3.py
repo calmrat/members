@@ -76,7 +76,7 @@ def download(uri, user=None, password=None, saveas=None, ssl_verify=False):
     return saveas
 
 
-def extract(uid=None, base_url=None, no_default_email_domain=True,
+def extract(uid=None, base_url=None, use_default_email_domain=False,
             default_email_domain=None):
     '''
     FIXME: DOCS...
@@ -86,7 +86,7 @@ def extract(uid=None, base_url=None, no_default_email_domain=True,
 
     # ded is shortform for "default email domain"
     # this will convert uid's to  uid@default_email_domain.com
-    no_ded = no_default_email_domain
+    use_ded = use_default_email_domain
     ded = default_email_domain
 
     get_args = GET_ARGS.copy()
@@ -101,7 +101,7 @@ def extract(uid=None, base_url=None, no_default_email_domain=True,
     # the team lead should be included as a member of their own team
     users.append(uid)
 
-    if not no_ded:
+    if use_ded:
         if not ded:
             raise RuntimeError("No default email domain set!")
         users = ['@'.join((u, ded)) for u in users]

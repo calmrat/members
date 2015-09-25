@@ -59,6 +59,8 @@ def parse_cli():
     # FIXME SUPPORT excluding users from the final list before printing
     parser.add_argument('-x', '--exclude', metavar='USER', nargs='+',
                         help="exclude results users by pattern")
+    parser.add_argument('-L', '--one-line', action='store_true',
+                        help="return results on a single line")
 
     # Mailman 2
     mm2 = subparsers.add_parser('mailman2')
@@ -83,7 +85,7 @@ def parse_cli():
     #                 help='Orgchart3 member filters')
     oc3.add_argument('-B', '--base-url', metavar='URL',
                      help='URL to OrgChart3 server')
-    oc3.add_argument('-NDED', '--no-default-email-domain', action='store_true',
+    oc3.add_argument('-UDED', '--use-default-email-domain', action='store_true',
                      help="don't append default email to usernames")
     oc3.add_argument('-DED', '--default-email-domain',
                      help="default email domain (eg: @example.com)")
@@ -140,6 +142,7 @@ if __name__ == "__main__":
     args = parse_cli()
 
     output_file = args['output']
+    one_line = args['one_line']
 
     src = args['src']  # what data source are we targetting?
 
@@ -165,11 +168,11 @@ if __name__ == "__main__":
         uid = args.get('uid', getuser())
         base_url = args.get('base_url')
         default_email_domain = args.get('default_email_domain')
-        no_default_email_domain = args.get('no_default_email_domain')
+        use_default_email_domain = args.get('use_default_email_domain')
 
         users = orgchart3.extract(
             uid=uid, base_url=base_url,
-            no_default_email_domain=no_default_email_domain,
+            use_default_email_domain=use_default_email_domain,
             default_email_domain=default_email_domain)
     elif src == 'github_repo':
         from members import github_repo
@@ -223,9 +226,10 @@ if __name__ == "__main__":
         # login isn't include, doesn't matter, we're running it anyway
         pass
 
-    # FIXME: make configurable
-    export_as = 'csv'
-    if export_as == 'csv':
+
+    if one_line:
+        output = ' '.join(users.index)
+    else:
         output = users.to_csv()
 
     if output_file:
