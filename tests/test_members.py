@@ -16,7 +16,7 @@ def test_version_check():
     # eg, expected
     # version_info = ('0', '0', '2')
     # __version__ = '.'.join(version_info[0:3])
-    _v = '0.0.4'
+    _v = '0.0.5'
 
     if _version.__version__ != _v:
         raise SystemError('SYNC VERSION in tests/test_members.py')

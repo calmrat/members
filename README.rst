@@ -33,10 +33,10 @@ Example configuration, eg at `~/.members`::
         base_url: http://some.domain.com/mailman2
         lists:
             announce-list: 
-                user: cward@redhat.com
+                user: bla@bla.com
                 password: asdfvi5f211
             memo-list: 
-                user: cward@redhat.com
+                user: bla@bla.com
                 password: dasdf458@1j
             dept-list:
 
@@ -62,7 +62,7 @@ Example usage, for Mailman2::
 
 Overriding username and password::
 
-    members mailman2 memo-list -u other -p SoM3P@Ss!
+    members mailman2 dept-list -u other -p SoM3P@Ss!
 
 
 OrgChart 3
