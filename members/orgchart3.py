@@ -14,7 +14,6 @@ from __future__ import unicode_literals, absolute_import
 
 import logging
 import os
-from urllib import urlencode
 import tempfile
 import warnings
 warnings.simplefilter('ignore')
@@ -22,6 +21,7 @@ warnings.simplefilter('ignore')
 from functioncache import functioncache
 import pandas as pd
 import requests as rq
+from requests.auth import HTTPBasicAuth
 from requests_kerberos import HTTPKerberosAuth, OPTIONAL
 
 logr = logging.getLogger(__name__)
@@ -49,25 +49,29 @@ GET_ARGS = {
 
 # note this leaves garbage in ~/.functioncache that might need to be cleaned
 @functioncache(1 * 60 * 60)  # cache for 1 hour
-def download(uri, user=None, password=None, saveas=None, ssl_verify=False):
+def download(uri, user=None, password=None, saveas=None, ssl_verify=False,
+             get_args=None):
     '''
     FIXME: DOCS...
     '''
     if saveas is None:
-        temp = tempfile.NamedTemporaryFile(prefix='requests_',
-                                           dir='/tmp')
+        temp = tempfile.NamedTemporaryFile(prefix='requests_', dir='/tmp')
         saveas = temp.name
         temp.close()
 
     if not (user or password):
         # Fall back to kerberos auth
+        logr.debug("Using Kerberos AUTH")
         auth = HTTPKerberosAuth(mutual_authentication=OPTIONAL)
     else:
-        auth = None
+        logr.debug("Using Basic AUTH")
+        auth = HTTPBasicAuth(user, password)
 
     with open(saveas, 'wb') as handle:
-        r = rq.get(uri, verify=ssl_verify, auth=auth)
+        # pass in arguments as dict; requests knows what to do with them
+        r = rq.get(uri, verify=ssl_verify, auth=auth, data=get_args)
         if not r.ok:
+            logr.error('[{}] {} ({})'.format(uri, r, r.text))
             raise RuntimeError
         for block in r.iter_content(1024):
             if not block:
@@ -77,7 +81,7 @@ def download(uri, user=None, password=None, saveas=None, ssl_verify=False):
 
 
 def extract(uid=None, base_url=None, use_default_email_domain=False,
-            default_email_domain=None):
+            default_email_domain=None, user=None, password=None):
     '''
     FIXME: DOCS...
     '''
@@ -91,8 +95,9 @@ def extract(uid=None, base_url=None, use_default_email_domain=False,
 
     get_args = GET_ARGS.copy()
     get_args['uid'] = uid
-    uri = '{}?{}'.format(export_url, urlencode(get_args))
-    csv_path = download(uri)
+    # pass get args as-is; requests handles them in dict form automatically
+    csv_path = download(export_url, user=user, password=password,
+                        get_args=get_args)
 
     members_df = pd.read_csv(csv_path)
 

@@ -165,6 +165,9 @@ if __name__ == "__main__":
     elif src == 'orgchart3':
         from members import orgchart3
 
+        user = args.get('user')
+        password = args.get('password')
+
         uid = args.get('uid', getuser())
         base_url = args.get('base_url')
         default_email_domain = args.get('default_email_domain')
@@ -173,7 +176,9 @@ if __name__ == "__main__":
         users = orgchart3.extract(
             uid=uid, base_url=base_url,
             use_default_email_domain=use_default_email_domain,
-            default_email_domain=default_email_domain)
+            default_email_domain=default_email_domain,
+            user=user, password=password
+        )
     elif src == 'github_repo':
         from members import github_repo
 
