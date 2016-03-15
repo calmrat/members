@@ -61,6 +61,8 @@ def parse_cli():
                         help="exclude results users by pattern")
     parser.add_argument('-L', '--one-line', action='store_true',
                         help="return results on a single line")
+    parser.add_argument('-c', '--count', action='store_true',
+                        help="return count of users")
 
     # Mailman 2
     mm2 = subparsers.add_parser('mailman2')
@@ -143,6 +145,7 @@ if __name__ == "__main__":
 
     output_file = args['output']
     one_line = args['one_line']
+    count = args['count']
 
     src = args['src']  # what data source are we targetting?
 
@@ -234,6 +237,8 @@ if __name__ == "__main__":
 
     if one_line:
         output = ' '.join(users.index)
+    elif count:
+        output = len(users)
     else:
         output = users.to_csv()
 
