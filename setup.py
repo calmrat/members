@@ -29,7 +29,7 @@ __irequires__ = [
     # CORE DEPENDENCIES
     'functioncache==0.92',
     'argparse==1.3.0',
-    'pyyaml==3.11',
+    'pyyaml==5.4',
     'requests==2.7.0',
     'requests-kerberos==0.7.0',  # FIXME: no hard dep; orgchart3 only
     'pandas==0.16.2',  # FIXME: shouldn't be a hard dep; orgchart3 only
